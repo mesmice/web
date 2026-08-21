@@ -27,8 +27,8 @@ export function RootLayout() {
   return (
     <div className="layout">
       <header className="layout__header">
-        <Link to="/" className="layout__brand" aria-label="Concord, página inicial">
-          Concord
+        <Link to="/" className="layout__brand" aria-label="Mesmice, página inicial">
+          Mesmice
         </Link>
         <ThemeToggle />
         <span

@@ -1,8 +1,8 @@
 {
-  "name": "concord-web",
+  "name": "mesmice-web",
   "version": "0.1.0",
   "private": true,
-  "description": "Aplicação Web do Concord",
+  "description": "Aplicação Web do Mesmice",
   "license": "UNLICENSED",
   "type": "module",
   "engines": {

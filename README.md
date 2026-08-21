@@ -1,6 +1,6 @@
-# concord-web
+# mesmice-web
 
-Aplicação Web do Concord. Interface principal da plataforma no navegador, consumindo os serviços da `concord-api`.
+Aplicação Web do Mesmice. Interface principal da plataforma no navegador, consumindo os serviços da `mesmice-api`.
 
 ## Stack
 
@@ -45,7 +45,7 @@ src/
 ├── components/ui/         Componentes base (Button, Spinner, ThemeToggle)
 ├── lib/api/               Cliente HTTP tipado com envelope de erro padrão
 ├── lib/ws/                Cliente WebSocket com reconexão automática
-├── lib/types/             Espelho local dos contratos até publicar @concord-mdm/contracts
+├── lib/types/             Espelho local dos contratos até publicar @mesmice/contracts
 ├── providers/             Tema claro/escuro persistido (localStorage)
 ├── stores/                Estado global (Zustand)
 ├── styles/                Design tokens + reset
@@ -55,21 +55,21 @@ src/
 
 ## Contratos
 
-O espelho local dos contratos está em `src/lib/types/api.ts`. Quando o pacote `@concord-mdm/contracts` for publicado no GitHub Packages, substituir por:
+O espelho local dos contratos está em `src/lib/types/api.ts`. Quando o pacote `@mesmice/contracts` for publicado no GitHub Packages, substituir por:
 
 ```bash
-npm install @concord-mdm/contracts
+npm install @mesmice/contracts
 ```
 
 com `.npmrc`:
 
 ```text
-@concord-mdm:registry=https://npm.pkg.github.com
+@mesmice:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
 ## Contribuição
 
-Siga as regras da organização ([repositório docs](https://github.com/concord-mdm/docs)): nada direto na `main`, branch descritiva → commit convencional → Pull Request → code review.
+Siga as regras da organização ([repositório docs](https://github.com/mesmice/docs)): nada direto na `main`, branch descritiva → commit convencional → Pull Request → code review.
 
-Roadmap desta fase: [docs/ROADMAP.md — Fase 1](https://github.com/concord-mdm/docs).
+Roadmap desta fase: [docs/ROADMAP.md — Fase 1](https://github.com/mesmice/docs).
