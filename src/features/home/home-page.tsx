@@ -17,7 +17,7 @@ export function HomePage() {
   if (isError) {
     return (
       <div className="home" role="alert">
-        <h1>Concord</h1>
+        <h1>Mesmice</h1>
         <p className="home__error">API indisponível: {error.message}</p>
       </div>
     )
@@ -28,7 +28,7 @@ export function HomePage() {
 
   return (
     <div className="home">
-      <h1>Concord</h1>
+      <h1>Mesmice</h1>
       <p>Status da API: <strong>{data.status === 'ok' ? 'operacional' : 'degradado'}</strong></p>
       <ul className="home__checks">
         <li>MongoDB: {mongo?.ok ? 'ok' : 'indisponível'}</li>

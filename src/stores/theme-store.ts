@@ -14,6 +14,6 @@ export const useThemeStore = create<ThemeState>()(
       preference: 'system',
       setPreference: (preference) => set({ preference })
     }),
-    { name: 'concord.theme' }
+    { name: 'mesmice.theme' }
   )
 )
