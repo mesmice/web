@@ -1,4 +1,13 @@
 :root {
+  /* Identidade Mesmice */
+  --color-brand-purple: #693de9;
+  --color-brand-lilac: #cabeff;
+  --color-brand-deep-purple: #2b1861;
+  --color-brand-ink: #080611;
+  --color-brand-white: #ffffff;
+
+  --font-family-display: 'Fredoka', 'Arial Rounded MT Bold', system-ui, sans-serif;
+  --font-family-sans: 'Poppins', system-ui, sans-serif;
   --font-size-sm: 0.875rem;
   --font-size-md: 1rem;
   --space-2: 8px;
