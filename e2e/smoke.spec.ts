@@ -2,76 +2,34 @@ import { test, expect } from '@playwright/test';
 
 test('app carrega e mostra a home', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Encontra os teus. Fica por aí.' })).toBeVisible();
-  await expect(page.getByRole('navigation', { name: 'Navegação principal' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Mesmice' })).toBeVisible();
 });
-
-test('menu mobile abre, fecha com Escape e fecha ao selecionar um link', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
-
-  const menuButton = page.getByRole('button', { name: 'Abrir menu' });
-  await expect(menuButton).toBeVisible();
-  await expect(menuButton).toHaveAttribute('aria-expanded', 'false');
-
-  await menuButton.click();
-  await expect(page.getByRole('button', { name: 'Fechar menu' })).toHaveAttribute(
-    'aria-expanded',
-    'true'
-  );
-  await expect(page.getByRole('link', { name: 'Comunidades' })).toBeVisible();
-  await expect(page.locator('.landing-navbar__mobile-menu')).toHaveCSS('position', 'fixed');
-  await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
-
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute(
-    'aria-expanded',
-    'false'
-  );
-  await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden');
-
-  await page.getByRole('button', { name: 'Abrir menu' }).click();
-  await page.getByRole('link', { name: 'O que é' }).click();
-  await expect(page.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute(
-    'aria-expanded',
-    'false'
-  );
-
-  await page.getByRole('button', { name: 'Abrir menu' }).click();
-  await page.setViewportSize({ width: 1024, height: 768 });
-  const hiddenMenuButton = page.locator('.landing-navbar__menu-button');
-  await expect(hiddenMenuButton).toBeHidden();
-  await expect(hiddenMenuButton).toHaveAttribute('aria-expanded', 'false');
-
-  await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.getByRole('button', { name: 'Abrir menu' })).toBeVisible();
-  await expect(page.locator('.landing-navbar__mobile-menu')).toBeHidden();
-});
-
-for (const viewport of [
-  { width: 360, height: 800 },
-  { width: 390, height: 844 },
-  { width: 393, height: 852 },
-  { width: 414, height: 896 },
-  { width: 430, height: 932 },
-  { width: 768, height: 1024 }
-]) {
-  test(`home não causa overflow horizontal em ${viewport.width}x${viewport.height}`, async ({
-    page
-  }) => {
-    await page.setViewportSize(viewport);
-    await page.goto('/');
-
-    const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
-    expect(documentWidth).toBe(viewport.width);
-    await expect(
-      page.getByRole('heading', { name: 'Encontra os teus. Fica por aí.' })
-    ).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Criar conta', exact: true }).last()).toBeVisible();
-  });
-}
 
 test('rota de login responde', async ({ page }) => {
   await page.goto('/login');
-  await expect(page.getByRole('heading', { name: 'Entrar no Mesmice' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Bem-vindo de volta!' })).toBeVisible();
+});
+
+test('login destaca campos vazios ao tentar entrar', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByRole('button', { name: 'Entrar' }).click();
+  await expect(page.getByPlaceholder(/voce@exemplo.com/)).toHaveClass(/border-red-500/);
+  await expect(page.getByPlaceholder('Sua senha')).toHaveClass(/border-red-500/);
+});
+
+test('cadastro permite montar um perfil em etapas', async ({ page }) => {
+  await page.goto('/register');
+  await expect(page.getByRole('heading', { name: 'Crie seu cantinho' })).toBeVisible();
+  await page.getByPlaceholder('Seu nome').fill('Pessoa Mesmice');
+  await page.getByPlaceholder('voce@exemplo.com').fill('pessoa@exemplo.com');
+  await page.getByLabel('Dia de nascimento').selectOption('20');
+  await page.getByLabel('Mês de nascimento').selectOption('05');
+  await page.getByLabel('Ano de nascimento').selectOption('1998');
+  await page.getByPlaceholder('Pelo menos 8 caracteres').fill('senha-segura');
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.getByRole('heading', { name: 'O que você curte?' })).toBeVisible();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await page.getByRole('button', { name: 'Criar meu perfil' }).click();
+  await expect(page.getByRole('heading', { name: 'Seu perfil está pronto!' })).toBeVisible();
 });

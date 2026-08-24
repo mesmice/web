@@ -25,15 +25,15 @@ O dev server sobe em `http://localhost:5173` com proxy de `/api` para a API loca
 
 ## Scripts
 
-| Comando         | Ação                                    |
-| --------------- | --------------------------------------- |
-| `npm run dev`   | Desenvolvimento (Vite)                  |
-| `npm run build` | Build de produção                       |
-| `npm run preview` | Servir o build de produção            |
-| `npm run typecheck` | Verificação de tipos                |
-| `npm run lint`  | ESLint                                  |
-| `npm test`      | Testes unitários (vitest + MSW)         |
-| `npm run e2e`   | Testes E2E (Playwright, Chromium)       |
+| Comando             | Ação                              |
+| ------------------- | --------------------------------- |
+| `npm run dev`       | Desenvolvimento (Vite)            |
+| `npm run build`     | Build de produção                 |
+| `npm run preview`   | Servir o build de produção        |
+| `npm run typecheck` | Verificação de tipos              |
+| `npm run lint`      | ESLint                            |
+| `npm test`          | Testes unitários (vitest + MSW)   |
+| `npm run e2e`       | Testes E2E (Playwright, Chromium) |
 
 ## Estrutura
 
@@ -67,6 +67,10 @@ com `.npmrc`:
 @mesmice:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
+
+## Documentação de autenticação
+
+O funcionamento detalhado das telas de login e cadastro, os payloads preparados para API, as validações, animações, assets e bibliotecas utilizadas está em [`docs/AUTH-FLOW.md`](docs/AUTH-FLOW.md).
 
 ## Contribuição
 
