@@ -1,4 +1,9 @@
-import { GATEWAY_PATH, type ClientMessage, type ServerMessage } from '../types/api.js'
+import {
+  GATEWAY_PATH,
+  WS_SESSION_REVOKED_CLOSE_CODE,
+  type ClientMessage,
+  type ServerMessage
+} from '../types/api.js'
 
 type Listener<T> = (data: T) => void
 
@@ -9,12 +14,17 @@ export class GatewaySocket {
   private socket: WebSocket | null = null
   private listeners = new Set<Listener<ServerMessage>>()
   private statusListeners = new Set<Listener<'connecting' | 'open' | 'closed'>>()
+  private sessionRevokedListeners = new Set<Listener<void>>()
   private reconnectAttempts = 0
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null
-  private manuallyClosed = false
+  /** Bloqueia apenas a RECONEXÃO automática; connect() explícito sempre funciona. */
+  private autoReconnectBlocked = false
 
   connect(): void {
-    if (this.socket || this.manuallyClosed) return
+    if (this.socket) return
+    // Conexão explícita reabilita a reconexão automática (ex.: relogin
+    // depois de um logout que havia bloqueado o backoff).
+    this.autoReconnectBlocked = false
     this.emitStatus('connecting')
 
     const socket = new WebSocket(WS_URL)
@@ -34,9 +44,18 @@ export class GatewaySocket {
       }
     })
 
-    socket.addEventListener('close', () => {
+    socket.addEventListener('close', (event) => {
       this.socket = null
       this.emitStatus('closed')
+
+      // Sessão revogada pelo servidor: sem reautenticação não há o que
+      // reconectar — bloqueia backoff e notifica os ouvintes.
+      if (event.code === WS_SESSION_REVOKED_CLOSE_CODE) {
+        this.autoReconnectBlocked = true
+        for (const listener of this.sessionRevokedListeners) listener()
+        return
+      }
+
       this.scheduleReconnect()
     })
 
@@ -46,7 +65,7 @@ export class GatewaySocket {
   }
 
   disconnect(): void {
-    this.manuallyClosed = true
+    this.autoReconnectBlocked = true
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer)
     this.socket?.close()
     this.socket = null
@@ -72,12 +91,18 @@ export class GatewaySocket {
     return () => this.statusListeners.delete(listener)
   }
 
+  /** Disparado quando o servidor fecha o socket por revogação de sessão (4402). */
+  onSessionRevoked(listener: Listener<void>): () => void {
+    this.sessionRevokedListeners.add(listener)
+    return () => this.sessionRevokedListeners.delete(listener)
+  }
+
   private emitStatus(status: 'connecting' | 'open' | 'closed'): void {
     for (const listener of this.statusListeners) listener(status)
   }
 
   private scheduleReconnect(): void {
-    if (this.manuallyClosed || this.reconnectTimer) return
+    if (this.autoReconnectBlocked || this.reconnectTimer) return
     const backoff = Math.min(MAX_BACKOFF_MS, 500 * 2 ** this.reconnectAttempts)
     const jittered = backoff * (0.75 + Math.random() * 0.5)
     this.reconnectAttempts += 1

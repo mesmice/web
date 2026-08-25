@@ -59,3 +59,9 @@ export type ServerMessage =
 export type ClientMessage = { type: 'ping'; sentAt?: number } | { type: 'identify'; token: string }
 
 export const GATEWAY_PATH = '/gateway'
+
+/**
+ * Close code enviado pelo gateway ao revogar a sessão
+ * (espelha `WS_CLOSE_CODES.SESSION_REVOKED` de @mesmice/contracts).
+ */
+export const WS_SESSION_REVOKED_CLOSE_CODE = 4402
