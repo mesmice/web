@@ -1,7 +1,7 @@
 /**
  * Único ponto do app que lê/escreve o refreshToken no storage (decisão B2:
  * localStorage durante o desenvolvimento — migrar para cookie httpOnly via
- * BFF antes do MVP; tradeoff XSS registrado em TASKS.md/DEVLOG.md).
+ * BFF antes do MVP; tradeoff XSS conhecido e aceito nessa fase).
  *
  * Mantido puro: nenhuma importação da camada de API, para evitar ciclos.
  */
