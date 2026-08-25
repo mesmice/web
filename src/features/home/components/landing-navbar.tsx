@@ -1,20 +1,28 @@
 import { useEffect, useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ButtonLink } from '../../../components/ui/button.js';
+import { NavbarShape } from './navbar-shape.js';
 
-const logoUrl = '/images/landing-page/hero/logo-v1-darkmode.png';
+const desktopLogoUrl = '/images/landing-page/hero/logo-v1-lightmode.png';
+const mobileLogoUrl = desktopLogoUrl;
 
 const NAV_LINKS = [
+  { label: 'Download', href: '#download' },
   { label: 'O que é', href: '#o-que-e' },
+  { label: 'Como funciona', href: '#como-funciona' },
   { label: 'Comunidades', href: '#comunidades' },
-  { label: 'Segurança', href: '#seguranca' },
-  { label: 'Sobre', href: '#sobre' }
+];
+
+const MOBILE_NAV_LINKS = [
+  { label: 'Download', href: '#download' },
+  { label: 'O que é', href: '#o-que-e' },
+  { label: 'Como funciona', href: '#como-funciona' },
+  { label: 'Comunidades', href: '#comunidades' },
 ];
 
 export function LandingNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuId = useId();
-
   useEffect(() => {
     if (!isMenuOpen) {
       return;
@@ -25,7 +33,7 @@ export function LandingNavbar() {
         setIsMenuOpen(false);
       }
     };
-    const desktopQuery = window.matchMedia('(min-width: 761px)');
+    const desktopQuery = window.matchMedia('(min-width: 1001px)');
     const previousBodyOverflow = document.body.style.overflow;
     const handleDesktopChange = (event: MediaQueryListEvent) => {
       if (event.matches) {
@@ -49,23 +57,35 @@ export function LandingNavbar() {
   return (
     <header className="landing-navbar">
       <nav className="landing-navbar__inner" aria-label="Navegação principal">
-        <Link to="/" className="landing-navbar__brand" aria-label="Mesmice, página inicial">
-          <img className="landing-navbar__logo" src={logoUrl} alt="Mesmice" />
+        <Link
+          to="/"
+          className="landing-navbar__brand landing-navbar__mobile-brand"
+          aria-label="Mesmice, página inicial"
+        >
+          <img className="landing-navbar__logo" src={mobileLogoUrl} alt="Mesmice" />
         </Link>
-        <div className="landing-navbar__links">
-          {NAV_LINKS.map((link) => (
-            <a key={link.href} className="landing-navbar__link" href={link.href}>
-              {link.label}
-            </a>
-          ))}
-        </div>
-        <div className="landing-navbar__actions">
-          <ButtonLink to="/login" variant="secondary" wave>
-            Entrar
-          </ButtonLink>
-          <ButtonLink to="/login" className="landing-navbar__signup" wave>
-            Criar conta
-          </ButtonLink>
+        <div className="landing-navbar__shell">
+          <NavbarShape />
+          <div className="landing-navbar__primary">
+            <Link to="/" className="landing-navbar__brand" aria-label="Mesmice, página inicial">
+              <img className="landing-navbar__logo" src={desktopLogoUrl} alt="Mesmice" />
+            </Link>
+            <div className="landing-navbar__links">
+              {NAV_LINKS.map((link) => (
+                <a key={link.href} className="landing-navbar__link" href={link.href}>
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          </div>
+          <div className="landing-navbar__actions">
+            <ButtonLink to="/login" variant="secondary" wave>
+              Entrar
+            </ButtonLink>
+            <ButtonLink to="/login" className="landing-navbar__signup" wave>
+              Criar conta
+            </ButtonLink>
+          </div>
         </div>
         <button
           className="landing-navbar__menu-button"
@@ -81,10 +101,23 @@ export function LandingNavbar() {
             <span />
           </span>
         </button>
+        <ButtonLink
+          to="/login"
+          className="landing-navbar__mobile-signup"
+          onClick={closeMenu}
+          wave
+        >
+          Criar conta
+        </ButtonLink>
       </nav>
-      <div id={menuId} className="landing-navbar__mobile-menu" hidden={!isMenuOpen}>
+      <div
+        id={menuId}
+        className="landing-navbar__mobile-menu"
+        aria-label="Navegação mobile"
+        hidden={!isMenuOpen}
+      >
         <div className="landing-navbar__mobile-links">
-          {NAV_LINKS.map((link) => (
+          {MOBILE_NAV_LINKS.map((link) => (
             <a
               key={link.href}
               className="landing-navbar__mobile-link"
