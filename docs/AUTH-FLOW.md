@@ -15,7 +15,7 @@ A autenticação tem duas telas principais:
 
 Ambas foram construídas com **React + TypeScript**, usando **React Router** para navegação, **Tailwind CSS** para o visual e ícones do **lucide-react**.
 
-Por enquanto, tudo funciona apenas no frontend: os formulários já validam os dados e montam os "pacotes" (payloads) que serão enviados ao servidor, mas **nenhuma chamada real à API foi feita ainda** — isso é o próximo passo.
+Os formulários validam os dados no frontend e usam a camada `lib/api` para enviar as credenciais ao backend. A persistência da sessão, dos usuários e das senhas continua sendo responsabilidade do servidor.
 
 ---
 
@@ -28,8 +28,8 @@ Por enquanto, tudo funciona apenas no frontend: os formulários já validam os d
 - **E-mail ou telefone**: o usuário pode entrar com qualquer um dos dois.
 - **Senha**: tem um botão de olho para mostrar/ocultar o texto digitado.
 - **Lembrar de mim**: opção já vem marcada por padrão.
-- **Esqueceu a senha?**: botão presente na tela, mas ainda sem funcionalidade — está reservado para quando o fluxo de recuperação de senha for criado.
-- **Botão Entrar**: valida o formulário e organiza os dados no formato abaixo, pronto para ser enviado à API:
+- **Esqueceu a senha?**: abre o fluxo de recuperação, que solicita e-mail ou telefone e envia a pessoa para as instruções recebidas.
+- **Botão Entrar**: valida o formulário, envia os dados ao endpoint de login e redireciona para a Home somente após sucesso:
 
 ```ts
 type LoginPayload = {
@@ -38,6 +38,22 @@ type LoginPayload = {
   rememberMe: boolean;
 };
 ```
+
+O login já chama `POST /auth/login` por meio de `src/lib/api/endpoints.ts`. O cliente HTTP usa `credentials: 'include'`, deixando o backend livre para manter a sessão em cookie `httpOnly`. O frontend não salva senha nem precisa conhecer a implementação de persistência da sessão.
+
+### Recuperação e redefinição de senha
+
+As rotas `/forgot-password` e `/reset-password?token=...` já estão prontas para integração. Elas usam:
+
+```txt
+POST /auth/forgot-password
+{ "identifier": "e-mail ou telefone" }
+
+POST /auth/reset-password
+{ "token": "token recebido", "password": "nova senha" }
+```
+
+O backend deve gerar e enviar o token, aplicar expiração e limite de tentativas, validar o token uma única vez e armazenar apenas o hash da nova senha. A resposta de recuperação deve ser genérica para não revelar se um e-mail ou telefone está cadastrado.
 
 O texto digitado no campo de identificação já é "limpo" automaticamente (remove espaços extras nas pontas) antes de ser usado. Quando o backend estiver pronto, basta trocar esse trecho por uma chamada real usando o cliente HTTP em `src/lib/api/client.ts`.
 

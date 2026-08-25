@@ -2,17 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react';
 import QRCode from 'qrcode';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
+import { login } from '../../lib/api/endpoints.js';
+import { ApiRequestError } from '../../lib/api/client.js';
+import { Spinner } from '../../components/ui/spinner.js';
+import { AuthBackdrop } from '../../components/ui/auth-backdrop.js';
 import './login-page.css';
 
 const inputClass =
   'mt-2 w-full rounded-lg border border-[#cabeff] bg-white px-3 py-3 text-sm text-[#2b1861] outline-none transition placeholder:text-[#8e7dbd] focus:border-[#693de9] focus:ring-2 focus:ring-[#cabeff]';
-
-type LoginPayload = {
-  identifier: string;
-  password: string;
-  rememberMe: boolean;
-};
 
 function WaveText({ children }: { children: string }) {
   return (
@@ -30,6 +29,7 @@ function WaveText({ children }: { children: string }) {
 }
 
 export function LoginPage() {
+  const navigate = useNavigate();
   const [rememberMe, setRememberMe] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [email, setEmail] = useState('');
@@ -39,6 +39,10 @@ export function LoginPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const mascotClickCount = useRef(0);
   const mascotTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loginMutation = useMutation({
+    mutationFn: login,
+    onSuccess: () => navigate('/')
+  });
 
   useEffect(() => {
     return () => {
@@ -72,13 +76,22 @@ export function LoginPage() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const payload: LoginPayload = { identifier: email.trim(), password, rememberMe };
-    void payload;
     setSubmitted(true);
+    if (!email.trim() || !password.trim() || loginMutation.isPending) return;
+
+    loginMutation.mutate({ identifier: email.trim(), password, rememberMe });
   }
+
+  const errorMessage =
+    loginMutation.error instanceof ApiRequestError
+      ? loginMutation.error.message
+      : loginMutation.error
+        ? 'Não foi possível entrar agora. Tente novamente.'
+        : null;
 
   return (
     <div className="auth-page relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#c9bdff] px-4 py-8 font-sans">
+      <AuthBackdrop />
       <div className="absolute -left-28 -top-28 h-72 w-72 rounded-full bg-[#693de9]/25 blur-3xl" />
       <div className="absolute -bottom-36 -right-20 h-96 w-96 rounded-full bg-[#f8f7ff]/70 blur-3xl" />
 
@@ -195,12 +208,12 @@ export function LoginPage() {
                   {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </span>
-              <button
-                type="button"
+              <Link
+                to="/forgot-password"
                 className="mt-2 text-xs font-bold text-[#693de9] hover:underline"
               >
                 Esqueceu a senha?
-              </button>
+              </Link>
             </label>
             <label className="flex cursor-pointer items-center gap-3 text-sm text-[#66568d]">
               <input
@@ -213,13 +226,19 @@ export function LoginPage() {
             </label>
             <button
               type="submit"
+              disabled={loginMutation.isPending}
               className="auth-action-button w-full rounded-lg bg-[#693de9] px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#cabeff] transition focus:outline-none focus:ring-4 focus:ring-[#cabeff]"
             >
-              <WaveText>Entrar</WaveText>
+              {loginMutation.isPending ? <Spinner label="Entrando" /> : <WaveText>Entrar</WaveText>}
             </button>
-            {submitted && (
+            {errorMessage && (
+              <p role="alert" className="text-center text-sm font-bold text-red-600">
+                {errorMessage}
+              </p>
+            )}
+            {submitted && !errorMessage && !loginMutation.isPending && (
               <p role="status" className="text-center text-sm font-bold text-[#2b1861]">
-                Dados prontos para autenticação.
+                Informe seus dados para entrar.
               </p>
             )}
           </form>

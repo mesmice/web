@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ChangeEvent, FormEvent, PointerEvent } from 'react';
 import { Check, ImagePlus, Mail, Smartphone, Upload, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { AuthBackdrop } from '../../components/ui/auth-backdrop.js';
 import './register-page.css';
 
 const BRAND = {
@@ -769,6 +770,7 @@ export function RegisterPage() {
 
   return (
     <div className="auth-page relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#cabeff] px-4 py-8 font-sans">
+      <AuthBackdrop />
       <div className="absolute inset-x-0 top-0 h-64 bg-[#693de9]" />
       <main className="relative w-full max-w-2xl rounded-2xl border border-[#2b1861]/10 bg-[#f8f7ff] p-6 shadow-2xl sm:p-10">
         <header className="mb-8 flex items-start justify-between gap-4">

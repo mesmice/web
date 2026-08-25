@@ -19,7 +19,9 @@ export function RootLayout() {
   const setGatewayStatus = useUiStore((state) => state.setGatewayStatus);
   const gatewayStatus = useUiStore((state) => state.gatewayStatus);
   const authStatus = useAuthStore((state) => state.status);
-  const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
+  const isAuthRoute = ['/login', '/register', '/forgot-password', '/reset-password'].includes(
+    location.pathname
+  );
 
   useEffect(() => {
     if (authStatus !== 'authenticated') return;
