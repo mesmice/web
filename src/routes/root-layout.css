@@ -61,3 +61,7 @@
   min-height: 100vh;
   padding: 0;
 }
+
+.layout--landing .layout__main {
+  padding: 0;
+}

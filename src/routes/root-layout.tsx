@@ -19,6 +19,7 @@ export function RootLayout() {
   const setGatewayStatus = useUiStore((state) => state.setGatewayStatus);
   const gatewayStatus = useUiStore((state) => state.gatewayStatus);
   const authStatus = useAuthStore((state) => state.status);
+  const isLandingRoute = location.pathname === '/';
   const isAuthRoute = ['/login', '/register', '/forgot-password', '/reset-password'].includes(
     location.pathname
   );
@@ -40,8 +41,10 @@ export function RootLayout() {
   }, [authStatus, setGatewayStatus]);
 
   return (
-    <div className={`layout ${isAuthRoute ? 'layout--auth' : ''}`}>
-      {!isAuthRoute && (
+    <div
+      className={`layout ${isAuthRoute ? 'layout--auth' : ''} ${isLandingRoute ? 'layout--landing' : ''}`}
+    >
+      {!isAuthRoute && !isLandingRoute && (
         <header className="layout__header">
           <Link to="/" className="layout__brand" aria-label="Mesmice, página inicial">
             Mesmice
