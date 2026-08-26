@@ -1,0 +1,52 @@
+.wave-text,
+.wave-text__visual,
+.wave-text__character {
+  display: inline-flex;
+}
+
+.wave-text__character {
+  position: relative;
+  overflow: hidden;
+  line-height: 1.25;
+}
+
+.wave-text__current,
+.wave-text__next {
+  display: block;
+  transform: translateY(0);
+  transition: transform var(--wave-duration) cubic-bezier(0.2, 0.75, 0.25, 1);
+  transition-delay: calc(var(--character-index) * 18ms);
+}
+
+.wave-text__next {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateY(var(--wave-distance));
+}
+
+.wave-text-trigger:hover:not(:disabled) .wave-text__current,
+.wave-text-trigger:focus-visible .wave-text__current {
+  transform: translateY(calc(var(--wave-distance) * -1));
+}
+
+.wave-text-trigger:hover:not(:disabled) .wave-text__next,
+.wave-text-trigger:focus-visible .wave-text__next {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wave-text__current,
+  .wave-text__next {
+    transition: none;
+  }
+
+  .wave-text-trigger:hover:not(:disabled) .wave-text__current,
+  .wave-text-trigger:focus-visible .wave-text__current {
+    transform: none;
+  }
+
+  .wave-text__next {
+    display: none;
+  }
+}
