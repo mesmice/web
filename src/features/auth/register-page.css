@@ -1,0 +1,162 @@
+.register-step-transition {
+  animation-duration: 520ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: both;
+  will-change: opacity, transform;
+}
+
+.auth-page button:not(:disabled) {
+  cursor: pointer;
+}
+
+.register-progress {
+  display: flex;
+  position: relative;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.register-progress::before {
+  content: '';
+  position: absolute;
+  top: 17px;
+  left: 10%;
+  right: 10%;
+  height: 3px;
+  border-radius: 99px;
+  background: #cabeff;
+}
+
+.register-progress__step {
+  display: flex;
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #8e7dbd;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.register-progress__dot {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #cabeff;
+  border-radius: 50%;
+  background: #f8f7ff;
+  color: #8e7dbd;
+  transition: 240ms ease;
+}
+
+.register-progress__step--done .register-progress__dot {
+  border-color: #693de9;
+  background: #693de9;
+  color: #fff;
+}
+
+.register-progress__step--current .register-progress__dot {
+  box-shadow: 0 0 0 5px #cabeff;
+}
+
+.register-progress__step--done .register-progress__label,
+.register-progress__step--current .register-progress__label {
+  color: #693de9;
+}
+
+.register-step-transition--forward {
+  animation-name: register-step-forward;
+}
+
+.register-step-transition--backward {
+  animation-name: register-step-backward;
+}
+
+.auth-action-button:hover {
+  background: #cabeff;
+  color: #2b1861;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(43, 24, 97, 0.18);
+}
+
+.wave-text > span:last-child {
+  display: inline-flex;
+}
+
+.wave-text > span:last-child > span {
+  display: inline-block;
+}
+
+.auth-action-button:hover .wave-text > span:last-child > span,
+.auth-action-button:focus-visible .wave-text > span:last-child > span {
+  animation: wave-letter 520ms ease-in-out both;
+}
+
+@keyframes wave-letter {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes register-step-forward {
+  from {
+    opacity: 0;
+    transform: translateX(42px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes register-step-backward {
+  from {
+    opacity: 0;
+    transform: translateX(-42px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .register-step-transition {
+    animation: none;
+  }
+  .auth-action-button:hover {
+    transform: none;
+  }
+  .auth-action-button:hover .wave-text > span:last-child > span,
+  .auth-action-button:focus-visible .wave-text > span:last-child > span {
+    animation: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .register-progress {
+    gap: 4px;
+  }
+
+  .register-progress__label {
+    font-size: 10px;
+  }
+
+  .register-progress__dot {
+    width: 32px;
+    height: 32px;
+  }
+
+  .register-progress::before {
+    top: 15px;
+  }
+}

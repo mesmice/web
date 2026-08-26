@@ -1,0 +1,72 @@
+.auth-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.auth-backdrop__logo,
+.auth-backdrop__mascot {
+  position: absolute;
+  object-fit: contain;
+  user-select: none;
+}
+
+.auth-backdrop__logo {
+  width: clamp(9rem, 18vw, 15rem);
+  opacity: 0.16;
+}
+
+.auth-backdrop__logo--top {
+  top: 7%;
+  left: 6%;
+  transform: rotate(-12deg);
+}
+
+.auth-backdrop__logo--bottom {
+  right: 5%;
+  bottom: 8%;
+  opacity: 0.12;
+  transform: rotate(10deg);
+}
+
+.auth-backdrop__mascot {
+  width: clamp(5rem, 10vw, 9rem);
+  opacity: 0.18;
+}
+
+.auth-backdrop__mascot--left {
+  bottom: 10%;
+  left: 17%;
+  transform: rotate(-9deg);
+}
+
+.auth-backdrop__mascot--right {
+  top: 12%;
+  right: 17%;
+  opacity: 0.14;
+  transform: scaleX(-1) rotate(-7deg);
+}
+
+@media (max-width: 640px) {
+  .auth-backdrop__logo--top {
+    top: 3%;
+    left: -2rem;
+  }
+
+  .auth-backdrop__logo--bottom {
+    right: -2rem;
+    bottom: 3%;
+  }
+
+  .auth-backdrop__mascot--left {
+    bottom: 7%;
+    left: -1rem;
+  }
+
+  .auth-backdrop__mascot--right {
+    top: 8%;
+    right: -1rem;
+  }
+}
