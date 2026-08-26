@@ -1,4 +1,11 @@
 import type { ErrorEnvelope } from '../types/api.js'
+import { isAuthErrorCode, type TokenPair } from '../types/auth.js'
+import { useAuthStore } from '../../stores/auth-store.js'
+import {
+  clearPersistedSession,
+  getSavedRefreshToken,
+  saveRefreshToken
+} from '../auth/session-persistence.js'
 
 export class ApiRequestError extends Error {
   readonly code: string
@@ -22,14 +29,91 @@ type RequestOptions = {
   signal?: AbortSignal
 }
 
-export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, signal } = options
+/** Rotas que autenticam por si próprias — nunca passam pelo fluxo de refresh. */
+const AUTH_BYPASS_PATHS = new Set([
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/logout'
+])
 
-  let response: Response
+let refreshInFlight: Promise<boolean> | null = null
+
+/**
+ * Troca o par de tokens. Sob concorrência (N requisições batendo 401 juntas),
+ * todas compartilham a mesma promise — exatamente um POST /auth/refresh sai.
+ * Retorna `true` quando um par novo passa a valer (o antigo morre na rotação).
+ */
+export function refreshSession(): Promise<boolean> {
+  refreshInFlight ??= performRefresh().finally(() => {
+    refreshInFlight = null
+  })
+  return refreshInFlight
+}
+
+async function performRefresh(): Promise<boolean> {
+  const refreshToken = getSavedRefreshToken()
+  if (!refreshToken) return false
+
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken })
+    })
+    if (!response.ok) return false
+
+    const pair = (await response.json()) as TokenPair
+    saveRefreshToken(pair.refreshToken)
+    useAuthStore.getState().setAccessToken(pair.accessToken)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Sessão sem volta (refresh falhou ou 401 terminal): limpa o storage e marca
+ * o motivo na store — o `<SessionWatcher/>` reage navegando ao /login.
+ * Ignorado quando a sessão já terminou (ex.: 401 tardio pós-limpeza de cache),
+ * para não sobrescrever o motivo registrado.
+ */
+function handleDeadSession(code: string): void {
+  clearPersistedSession()
+  const { status, clearSession } = useAuthStore.getState()
+  if (status === 'anonymous') return
+  clearSession(code === 'SESSION_REVOKED' ? 'revoked' : 'expired')
+}
+
+async function parseErrorResponse(response: Response): Promise<ApiRequestError> {
+  try {
+    const envelope = (await response.json()) as ErrorEnvelope
+    if (envelope?.error) {
+      return new ApiRequestError(
+        response.status,
+        envelope.error.code,
+        envelope.error.message,
+        envelope.error.details
+      )
+    }
+  } catch {
+    // corpo não-JSON ou vazio — cai no fallback abaixo
+  }
+  return new ApiRequestError(response.status, 'INTERNAL', `Erro HTTP ${response.status}.`)
+}
+
+async function execute(path: string, options: RequestOptions): Promise<Response> {
+  const { method = 'GET', body, signal } = options
+  const accessToken = useAuthStore.getState().accessToken
+
+  const headers: Record<string, string> = {}
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  if (accessToken) headers.Authorization = `Bearer ${accessToken}`
+
+  try {
+    return await fetch(`${API_BASE_URL}${path}`, {
       method,
-      headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
+      headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
       signal
     })
@@ -38,25 +122,31 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
       cause: String(cause)
     })
   }
+}
 
-  if (!response.ok) {
-    let envelope: ErrorEnvelope
-    try {
-      envelope = (await response.json()) as ErrorEnvelope
-    } catch {
-      throw new ApiRequestError(response.status, 'INTERNAL', `Erro HTTP ${response.status}.`)
+export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  let response = await execute(path, options)
+
+  // Sessão possivelmente expirada: um refresh + retry único antes de desistir.
+  if (response.status === 401 && !AUTH_BYPASS_PATHS.has(path)) {
+    const initialError = await parseErrorResponse(response)
+
+    if (!(await refreshSession())) {
+      handleDeadSession(initialError.code)
+      throw initialError
     }
-    if (envelope?.error) {
-      throw new ApiRequestError(
-        response.status,
-        envelope.error.code,
-        envelope.error.message,
-        envelope.error.details
-      )
+
+    response = await execute(path, options)
+    if (response.status === 401) {
+      const retriedError = await parseErrorResponse(response)
+      if (isAuthErrorCode(retriedError.code)) handleDeadSession(retriedError.code)
+      throw retriedError
     }
-    throw new ApiRequestError(response.status, 'INTERNAL', `Erro HTTP ${response.status}.`)
   }
 
+  if (!response.ok) {
+    throw await parseErrorResponse(response)
+  }
   if (response.status === 204) {
     return undefined as T
   }

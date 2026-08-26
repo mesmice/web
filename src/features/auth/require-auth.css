@@ -1,0 +1,5 @@
+.auth-splash {
+  min-height: 60vh;
+  display: grid;
+  place-items: center;
+}

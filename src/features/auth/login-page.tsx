@@ -1,7 +1,15 @@
+import { Navigate } from 'react-router-dom'
 import { Button } from '../../components/ui/button.js'
+import { useAuthStore } from '../../stores/auth-store.js'
 import './login-page.css'
 
 export function LoginPage() {
+  const status = useAuthStore((state) => state.status)
+
+  if (status === 'authenticated') {
+    return <Navigate to="/" replace />
+  }
+
   return (
     <div className="login">
       <h1>Entrar no Mesmice</h1>
