@@ -8,10 +8,9 @@ import { login } from '../../lib/api/endpoints.js';
 import { ApiRequestError } from '../../lib/api/client.js';
 import { Spinner } from '../../components/ui/spinner.js';
 import { AuthBackdrop } from '../../components/ui/auth-backdrop.js';
+import { Input } from '../../components/ui/input.js';
+import { Checkbox } from '../../components/ui/checkbox.js';
 import './login-page.css';
-
-const inputClass =
-  'mt-2 w-full rounded-lg border border-[#cabeff] bg-white px-3 py-3 text-sm text-[#2b1861] outline-none transition placeholder:text-[#8e7dbd] focus:border-[#693de9] focus:ring-2 focus:ring-[#cabeff]';
 
 function WaveText({ children }: { children: string }) {
   return (
@@ -172,8 +171,8 @@ export function LoginPage() {
                   size={17}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8e7dbd]"
                 />
-                <input
-                  className={`${inputClass} pl-10 ${submitted && !email.trim() ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+                <Input
+                  className={`pl-10 ${submitted && !email.trim() ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   type="text"
@@ -190,8 +189,8 @@ export function LoginPage() {
                   size={17}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8e7dbd]"
                 />
-                <input
-                  className={`${inputClass} pr-11 pl-10 ${submitted && !password.trim() ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+                <Input
+                  className={`pr-11 pl-10 ${submitted && !password.trim() ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   type={showPassword ? 'text' : 'password'}
@@ -216,11 +215,9 @@ export function LoginPage() {
               </Link>
             </label>
             <label className="flex cursor-pointer items-center gap-3 text-sm text-[#66568d]">
-              <input
+              <Checkbox
                 checked={rememberMe}
                 onChange={(event) => setRememberMe(event.target.checked)}
-                type="checkbox"
-                className="h-4 w-4 accent-[#693de9]"
               />
               Lembrar de mim
             </label>
