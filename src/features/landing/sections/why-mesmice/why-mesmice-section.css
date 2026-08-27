@@ -1,0 +1,52 @@
+.why-mesmice-section {
+  min-height: 220svh;
+  overflow: clip;
+  background: var(--landing-context-bg);
+}
+.why-mesmice-intro h2 span,
+.why-mesmice-intro > p span {
+  display: block;
+}
+.why-mesmice-intro h2 strong {
+  color: var(--color-brand-lilac);
+  font: inherit;
+}
+@supports (animation-timeline: view()) {
+  .why-mesmice-card {
+    animation: why-card-reveal linear both;
+    animation-timeline: view(block);
+    animation-range: entry 4% entry 82%;
+    will-change: opacity, transform;
+  }
+}
+@keyframes why-card-reveal {
+  from {
+    opacity: 0.4;
+    transform: translate3d(0, 30px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .why-mesmice-card:hover {
+    border-color: rgb(105 61 233 / 18%);
+    box-shadow: 0 14px 34px rgb(8 6 17 / 9%);
+    transform: translateY(-2px);
+  }
+}
+@media (max-width: 1023px) {
+  .why-mesmice-section {
+    min-height: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .why-mesmice-card {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    transition: none;
+    will-change: auto;
+  }
+}
