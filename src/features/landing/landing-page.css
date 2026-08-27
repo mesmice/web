@@ -1,9 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
 
 .landing-page {
+  --landing-theme-progress: 0%;
+  --landing-context-bg: color-mix(
+    in srgb,
+    var(--color-landing-section-soft) calc(100% - var(--landing-theme-progress)),
+    var(--color-brand-ink) var(--landing-theme-progress)
+  );
+  --landing-context-text: color-mix(
+    in srgb,
+    var(--color-brand-ink) calc(100% - var(--landing-theme-progress)),
+    var(--color-brand-white) var(--landing-theme-progress)
+  );
+  --landing-context-copy: color-mix(
+    in srgb,
+    var(--color-landing-copy) calc(100% - var(--landing-theme-progress)),
+    var(--color-landing-copy-dark) var(--landing-theme-progress)
+  );
   --landing-content-max: 1440px;
   --landing-radius-lg: 12px;
-  --landing-section: #eee8ff;
+  --landing-section: var(--color-landing-section);
   --color-accent: var(--color-brand-purple);
   --color-focus: var(--color-brand-purple);
 
@@ -43,6 +59,14 @@
 .landing-page .btn--secondary:hover:not(:disabled) {
   background: rgb(202 190 255 / 14%);
   border-color: var(--color-brand-lilac);
+}
+.landing-reveal-stack {
+  position: relative;
+  background: var(--color-landing-section);
+}
+.landing-reveal-stack__cover {
+  position: relative;
+  z-index: 5;
 }
 .landing-navbar {
   position: sticky;
@@ -248,15 +272,14 @@
 }
 .hero__actions {
   display: flex;
-  gap: 20px;
+  gap: 16px;
   margin-top: 32px;
 }
-.hero__button {
-  min-width: 190px;
-  min-height: 64px;
-  padding-inline: 28px;
-  font-size: 1rem;
-  font-weight: 650;
+.landing-page .hero__button {
+  min-width: 100px;
+  min-height: 48px;
+  padding-inline: 20px;
+  border-radius: var(--landing-radius-lg);
 }
 .hero__visual {
   position: absolute;
@@ -309,11 +332,6 @@
   font-weight: 600;
   letter-spacing: 0.01em;
   white-space: nowrap;
-}
-.landing-about {
-  min-height: clamp(280px, 35vw, 520px);
-  margin-top: -28px;
-  background: var(--landing-section);
 }
 @keyframes hero-enter {
   from {
@@ -568,14 +586,14 @@
     max-width: 420px;
     margin: 30px auto 0;
     flex-direction: column;
-    gap: 24px;
+    gap: 12px;
   }
-  .hero__button {
+  .landing-page .hero__button {
     width: 100%;
     min-width: 0;
-    min-height: 62px;
-    flex: none;
+    min-height: 52px;
     padding-inline: 24px;
+    border-radius: 18px;
   }
   .hero__visual {
     right: clamp(-162px, -37vw, -132px);
@@ -618,9 +636,6 @@
   }
   .landing-marquee__phrase {
     font-size: 1rem;
-  }
-  .landing-about {
-    margin-top: 0;
   }
 }
 @keyframes mobile-menu-enter {

@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ButtonLink } from '../../../components/ui/button.js';
+import { ButtonLink } from '../../../../components/ui/button.js';
 import { NavbarShape } from './navbar-shape.js';
 
 const desktopLogoUrl = '/images/landing-page/hero/logo-v1-lightmode.png';
@@ -8,16 +8,16 @@ const mobileLogoUrl = desktopLogoUrl;
 
 const NAV_LINKS = [
   { label: 'Download', href: '#download' },
-  { label: 'O que é', href: '#o-que-e' },
-  { label: 'Como funciona', href: '#como-funciona' },
-  { label: 'Comunidades', href: '#comunidades' },
+  { label: 'Sobre nós', href: '#about' },
+  { label: 'Como funciona', href: '#how-works' },
+    { label: 'Suporte', href: '#support' },
 ];
 
 const MOBILE_NAV_LINKS = [
   { label: 'Download', href: '#download' },
-  { label: 'O que é', href: '#o-que-e' },
-  { label: 'Como funciona', href: '#como-funciona' },
-  { label: 'Comunidades', href: '#comunidades' },
+  { label: 'Sobre nós', href: '#about' },
+  { label: 'Como funciona', href: '#how-works' },
+    { label: 'Suporte', href: '#support' },
 ];
 
 export function LandingNavbar() {
@@ -82,7 +82,7 @@ export function LandingNavbar() {
             <ButtonLink to="/login" variant="secondary" wave>
               Entrar
             </ButtonLink>
-            <ButtonLink to="/login" className="landing-navbar__signup" wave>
+            <ButtonLink to="/register" className="landing-navbar__signup" wave>
               Criar conta
             </ButtonLink>
           </div>
@@ -102,7 +102,7 @@ export function LandingNavbar() {
           </span>
         </button>
         <ButtonLink
-          to="/login"
+          to="/register"
           className="landing-navbar__mobile-signup"
           onClick={closeMenu}
           wave
@@ -132,7 +132,7 @@ export function LandingNavbar() {
           <ButtonLink to="/login" variant="secondary" onClick={closeMenu} wave>
             Entrar
           </ButtonLink>
-          <ButtonLink to="/login" onClick={closeMenu} wave>
+          <ButtonLink to="/register" onClick={closeMenu} wave>
             Criar conta
           </ButtonLink>
         </div>

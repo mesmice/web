@@ -7,6 +7,12 @@
   --color-brand-white: #ffffff;
   --color-landing-navbar: #693de9;
   --color-landing-navbar-text: #ffffd8;
+  --color-landing-section: #eee8ff;
+  --color-landing-section-soft: #e9e0ff;
+  --color-landing-card: #fffefe;
+  --color-landing-card-visual: #f4f0ff;
+  --color-landing-copy: #5a4b82;
+  --color-landing-copy-dark: #c7bedc;
 
   --font-family-display: 'Fredoka', 'Arial Rounded MT Bold', system-ui, sans-serif;
   --font-family-sans: 'Poppins', system-ui, sans-serif;
