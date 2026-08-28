@@ -1,4 +1,4 @@
-const MARQUEE_TEXT = 'encontra os teus · começa a conversa · fica por aí ·';
+const MARQUEE_TEXT = 'encontre a sua turma · comece a conversa · fique por aqui ·';
 
 function MarqueeGroup() {
   return (
@@ -15,7 +15,9 @@ function MarqueeGroup() {
 export function LandingMarquee() {
   return (
     <div className="landing-marquee">
-      <span className="visually-hidden">Encontra os teus, começa a conversa, fica por aí.</span>
+      <span className="visually-hidden">
+        Encontre a sua turma, comece a conversa, fique por aqui.
+      </span>
       <div className="landing-marquee__track" aria-hidden="true">
         <MarqueeGroup />
         <MarqueeGroup />

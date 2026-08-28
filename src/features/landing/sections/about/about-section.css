@@ -1,0 +1,86 @@
+.landing-about {
+  --about-heading-scale: 1;
+  min-height: 520svh;
+  margin-top: -28px;
+  scroll-margin-top: 112px;
+  overflow: clip;
+  background-color: var(--landing-context-bg);
+  background-image: radial-gradient(circle at 50% 18%, rgb(255 255 255 / 58%), transparent 31%);
+  border-radius: 50% 50% 0 0 / 34px 34px 0 0;
+}
+
+.landing-about__header h2 {
+  color: var(--landing-context-text);
+}
+
+.landing-about__header > p {
+  color: var(--landing-context-copy);
+}
+
+.landing-about__header {
+  transform: scale(var(--about-heading-scale));
+  transform-origin: center;
+  will-change: transform;
+}
+
+.about-scroll-card {
+  --card-y: 112svh;
+  --card-scale: 1;
+  transform: translate3d(0, calc(-50% + var(--card-y)), 0) scale(var(--card-scale));
+  transform-origin: 50% 10%;
+  will-change: transform;
+}
+
+@media (max-width: 1023px) {
+  .landing-about {
+    min-height: 470svh;
+  }
+}
+
+@media (max-width: 639px) {
+  .landing-about {
+    min-height: 410svh;
+    margin-top: 0;
+    scroll-margin-top: 92px;
+    border-radius: 0;
+  }
+  .landing-about__header {
+    padding: 4.5rem 0 3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-about {
+    min-height: auto;
+    overflow: hidden;
+  }
+  .landing-about__sticky {
+    position: relative;
+    height: auto;
+    overflow: visible;
+  }
+  .landing-about__header {
+    position: relative;
+    min-height: 100svh;
+    padding-block: 6rem;
+    opacity: 1;
+    transform: none;
+  }
+  .landing-about__stack {
+    position: relative;
+    display: grid;
+    gap: 1.5rem;
+    width: min(calc(100% - 2.5rem), 1100px);
+    margin-inline: auto;
+    padding-bottom: 5rem;
+  }
+  .about-scroll-card {
+    position: relative;
+    inset: auto;
+    width: min(100%, 520px);
+    height: min(680px, 78svh);
+    opacity: 1;
+    transform: none;
+    will-change: auto;
+  }
+}

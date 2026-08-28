@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import { ButtonLink } from '../../../components/ui/button.js';
+import { ButtonLink } from '../../../../components/ui/button.js';
 
 const mascotUrl = '/images/landing-page/hero/mesmice-hero-mascote.png';
 
@@ -10,7 +10,7 @@ export function HeroSection() {
   useEffect(() => {
     const hero = heroRef.current;
     const supportsPointerGlow = window.matchMedia(
-      '(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)',
+      '(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)'
     );
 
     if (!hero || !supportsPointerGlow.matches) {
@@ -44,14 +44,14 @@ export function HeroSection() {
         <div className="hero__content">
           <p className="hero__eyebrow">mais do mesmo. ainda bem.</p>
           <h1 id="hero-title" className="hero__title">
-            <span className="hero__title-line">Encontra os teus.</span>
-            <span className="hero__title-line hero__title-line--accent">Fica por aí.</span>
+            <span className="hero__title-line">Encontre os teus.</span>
+            <span className="hero__title-line hero__title-line--accent">Fique por aqui.</span>
           </h1>
           <p className="hero__description">
             Conversas, comunidades e pessoas num lugar feito para <strong>estar junto.</strong>
           </p>
           <div className="hero__actions">
-            <ButtonLink to="/login" className="hero__button" wave>
+            <ButtonLink to="/register" className="hero__button" wave>
               Criar conta
             </ButtonLink>
             <ButtonLink to="/login" variant="secondary" className="hero__button" wave>
