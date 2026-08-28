@@ -134,8 +134,22 @@ test('rota de login responde', async ({ page }) => {
 test('login destaca campos vazios ao tentar entrar', async ({ page }) => {
   await page.goto('/login');
   await page.getByRole('button', { name: 'Entrar' }).click();
-  await expect(page.getByPlaceholder(/voce@exemplo.com/)).toHaveClass(/border-red-500/);
-  await expect(page.getByPlaceholder('Sua senha')).toHaveClass(/border-red-500/);
+  await expect(page.getByPlaceholder(/voce@exemplo.com/)).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.getByPlaceholder('Sua senha')).toHaveAttribute('aria-invalid', 'true');
+});
+
+test('inputs com ícones preservam espaço para o conteúdo', async ({ page }) => {
+  await page.goto('/login');
+
+  const emailInput = page.getByPlaceholder(/voce@exemplo.com/);
+  const passwordInput = page.getByPlaceholder('Sua senha');
+
+  expect(
+    await emailInput.evaluate((element) => Number.parseFloat(getComputedStyle(element).paddingLeft))
+  ).toBeGreaterThan(32);
+  expect(
+    await passwordInput.evaluate((element) => Number.parseFloat(getComputedStyle(element).paddingRight))
+  ).toBeGreaterThan(40);
 });
 
 test('cadastro permite montar um perfil em etapas', async ({ page }) => {
@@ -148,6 +162,8 @@ test('cadastro permite montar um perfil em etapas', async ({ page }) => {
   await page.getByPlaceholder('Digite a senha novamente').fill('senha-segura');
   await page.getByRole('checkbox', { name: /termos de uso/ }).check();
   await page.getByRole('button', { name: 'Criar conta' }).click();
+  await expect(page.getByRole('radio', { name: 'Masculino' })).toBeVisible();
+  await expect(page.getByRole('checkbox', { name: 'Masculino' })).toHaveCount(0);
   await page.getByLabel('Dia de nascimento').selectOption('20');
   await page.getByLabel('Mês de nascimento').selectOption('05');
   await page.getByLabel('Ano de nascimento').selectOption('1998');

@@ -1,7 +1,8 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { Button, ButtonLink } from './button.js';
+import { Spinner } from './spinner.js';
 
 afterEach(cleanup);
 
@@ -26,15 +27,35 @@ describe('Button', () => {
   it('aplica a variante secondary', () => {
     render(<Button variant="secondary">Entrar</Button>);
 
-    expect(screen.getByRole('button', { name: 'Entrar' }).classList.contains('btn--secondary')).toBe(
-      true
-    );
+    expect(
+      screen.getByRole('button', { name: 'Entrar' }).classList.contains('btn--secondary')
+    ).toBe(true);
   });
 
   it('mantém o estado disabled nativo', () => {
     render(<Button disabled>Entrar</Button>);
 
     expect(screen.getByRole('button', { name: 'Entrar' }).hasAttribute('disabled')).toBe(true);
+  });
+
+  it('mantém nome acessível único durante loading', () => {
+    render(
+      <Button disabled>
+        <Spinner decorative /> Salvando
+      </Button>
+    );
+
+    expect(screen.getByRole('button', { name: 'Salvando' })).toBeTruthy();
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('aciona o callback por click', () => {
+    const onClick = vi.fn();
+    render(<Button onClick={onClick}>Entrar</Button>);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+
+    expect(onClick).toHaveBeenCalledOnce();
   });
 
   it('mantém conteúdo React composto sem convertê-lo em caracteres', () => {
