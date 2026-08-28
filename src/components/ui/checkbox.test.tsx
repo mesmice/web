@@ -24,4 +24,13 @@ describe('Checkbox', () => {
 
     expect(screen.getByRole('checkbox', { name: 'Aceitar' }).hasAttribute('disabled')).toBe(true);
   });
+
+  it('pode receber foco pelo teclado', () => {
+    render(<Checkbox aria-label="Aceitar" />);
+    const checkbox = screen.getByRole('checkbox', { name: 'Aceitar' });
+
+    checkbox.focus();
+
+    expect(document.activeElement).toBe(checkbox);
+  });
 });

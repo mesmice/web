@@ -24,4 +24,10 @@ describe('Textarea', () => {
 
     expect(screen.getByRole('textbox', { name: 'Bio' }).getAttribute('aria-invalid')).toBe('true');
   });
+
+  it('preserva o estado disabled nativo', () => {
+    render(<Textarea aria-label="Bio" disabled />);
+
+    expect(screen.getByRole('textbox', { name: 'Bio' }).hasAttribute('disabled')).toBe(true);
+  });
 });

@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { Button, ButtonLink } from './button.js';
+import { Spinner } from './spinner.js';
 
 afterEach(cleanup);
 
@@ -35,6 +36,17 @@ describe('Button', () => {
     render(<Button disabled>Entrar</Button>);
 
     expect(screen.getByRole('button', { name: 'Entrar' }).hasAttribute('disabled')).toBe(true);
+  });
+
+  it('mantém nome acessível único durante loading', () => {
+    render(
+      <Button disabled>
+        <Spinner decorative /> Salvando
+      </Button>
+    );
+
+    expect(screen.getByRole('button', { name: 'Salvando' })).toBeTruthy();
+    expect(screen.queryByRole('status')).toBeNull();
   });
 
   it('aciona o callback por click', () => {

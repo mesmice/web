@@ -460,7 +460,10 @@ function ProfileStep({
               key={value}
               className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#cabeff] bg-white px-3 py-3 text-sm text-[#66568d] transition hover:border-[#693de9]"
             >
-              <Checkbox
+              <input
+                type="radio"
+                name="gender"
+                className="register-gender__radio"
                 checked={data.gender === value}
                 onChange={() => onGenderChange(value as Gender)}
               />

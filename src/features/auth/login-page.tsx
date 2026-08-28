@@ -228,7 +228,13 @@ export function LoginPage() {
               disabled={loginMutation.isPending}
               className="auth-action-button w-full rounded-lg bg-[#693de9] px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#cabeff] transition focus:outline-none focus:ring-4 focus:ring-[#cabeff]"
             >
-              {loginMutation.isPending ? <Spinner label="Entrando" /> : <WaveText>Entrar</WaveText>}
+              {loginMutation.isPending ? (
+                <>
+                  <Spinner decorative /> Entrando
+                </>
+              ) : (
+                <WaveText>Entrar</WaveText>
+              )}
             </button>
             {errorMessage && (
               <p role="alert" className="text-center text-sm font-bold text-red-600">

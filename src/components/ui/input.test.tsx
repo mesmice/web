@@ -26,4 +26,10 @@ describe('Input', () => {
     expect(input.hasAttribute('disabled')).toBe(true);
     expect(input.getAttribute('aria-invalid')).toBe('true');
   });
+
+  it('preserva classes de composição de spacing', () => {
+    render(<Input aria-label="Busca" className="pl-10 pr-11" />);
+
+    expect(screen.getByRole('textbox', { name: 'Busca' }).className).toContain('pl-10 pr-11');
+  });
 });

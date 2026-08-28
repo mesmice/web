@@ -9,6 +9,41 @@
   cursor: pointer;
 }
 
+.register-gender__radio {
+  display: inline-grid;
+  place-content: center;
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+  appearance: none;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  background: var(--color-surface-primary);
+  cursor: pointer;
+}
+
+.register-gender__radio::before {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--color-action-primary);
+  content: '';
+  transform: scale(0);
+}
+
+.register-gender__radio:checked {
+  border-color: var(--color-action-primary);
+}
+
+.register-gender__radio:checked::before {
+  transform: scale(1);
+}
+
+.register-gender__radio:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
 .register-progress {
   display: flex;
   position: relative;

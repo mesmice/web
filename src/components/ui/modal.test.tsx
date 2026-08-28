@@ -53,4 +53,71 @@ describe('Modal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
     expect(onConfirm).toHaveBeenCalledOnce();
   });
+
+  it('contém Tab e Shift+Tab dentro do diálogo', () => {
+    render(
+      <Modal
+        open
+        title="Sessão expirada"
+        description="Entre novamente."
+        confirmLabel="Entrar"
+        onConfirm={vi.fn()}
+      />
+    );
+    const dialog = screen.getByRole('dialog');
+    const confirm = screen.getByRole('button', { name: 'Entrar' });
+
+    fireEvent.keyDown(dialog, { key: 'Tab' });
+    expect(document.activeElement).toBe(confirm);
+
+    fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(confirm);
+  });
+
+  it('isola o conteúdo externo e devolve foco ao fechar', () => {
+    const { rerender } = render(
+      <>
+        <button>Origem</button>
+        <Modal
+          open={false}
+          title="Sessão expirada"
+          description="Entre novamente."
+          confirmLabel="Entrar"
+          onConfirm={vi.fn()}
+        />
+      </>
+    );
+    const origin = screen.getByRole('button', { name: 'Origem' });
+    origin.focus();
+
+    rerender(
+      <>
+        <button>Origem</button>
+        <Modal
+          open
+          title="Sessão expirada"
+          description="Entre novamente."
+          confirmLabel="Entrar"
+          onConfirm={vi.fn()}
+        />
+      </>
+    );
+
+    expect(origin.closest('div')?.inert).toBe(true);
+
+    rerender(
+      <>
+        <button>Origem</button>
+        <Modal
+          open={false}
+          title="Sessão expirada"
+          description="Entre novamente."
+          confirmLabel="Entrar"
+          onConfirm={vi.fn()}
+        />
+      </>
+    );
+
+    expect(document.activeElement).toBe(origin);
+  });
 });

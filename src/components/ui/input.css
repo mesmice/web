@@ -1,49 +1,62 @@
-.input,
-.textarea {
-  width: 100%;
-  margin-top: var(--space-2);
-  border: 1px solid var(--color-control-border);
-  border-radius: var(--radius-md);
-  background: var(--color-control-bg);
-  color: var(--color-control-text);
-  font: inherit;
-  font-size: var(--font-size-sm);
-  outline: none;
-  transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease;
-}
+@layer theme, base, components, utilities;
 
-.input {
-  padding: 0.75rem;
-}
+@layer components {
+  .input,
+  .textarea {
+    width: 100%;
+    margin-top: var(--space-2);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-primary);
+    color: var(--color-text-primary);
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-sm);
+    outline: none;
+    transition:
+      border-color 120ms ease,
+      box-shadow 120ms ease,
+      background-color 120ms ease;
+  }
 
-.textarea {
-  min-height: 5.75rem;
-  padding: 0.75rem;
-  resize: vertical;
-}
+  .input {
+    min-height: var(--control-height-md);
+    padding: 0.6875rem 0.75rem;
+  }
 
-.input::placeholder,
-.textarea::placeholder {
-  color: var(--color-control-placeholder);
-}
+  .textarea {
+    min-height: 5.75rem;
+    padding: 0.75rem;
+    resize: vertical;
+  }
 
-.input:focus-visible,
-.textarea:focus-visible {
-  border-color: var(--color-control-focus);
-  box-shadow: 0 0 0 2px var(--color-control-focus-ring);
-}
+  .input::placeholder,
+  .textarea::placeholder {
+    color: var(--color-text-muted);
+  }
 
-.input:disabled,
-.textarea:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
+  .input:focus-visible,
+  .textarea:focus-visible {
+    border-color: var(--color-border-focus);
+    box-shadow: 0 0 0 3px var(--color-focus-ring);
+  }
 
-.input--error,
-.textarea--error,
-.input--error:focus-visible,
-.textarea--error:focus-visible {
-  border-color: var(--color-danger);
+  .input:disabled,
+  .textarea:disabled {
+    border-color: var(--color-border-disabled);
+    background: var(--color-surface-disabled);
+    color: var(--color-text-disabled);
+    cursor: not-allowed;
+  }
+
+  .input--error,
+  .textarea--error,
+  .input--error:focus-visible,
+  .textarea--error:focus-visible {
+    border-color: var(--color-danger);
+  }
+
+  .input--error:focus-visible,
+  .textarea--error:focus-visible {
+    box-shadow: 0 0 0 3px var(--color-danger-soft);
+  }
 }

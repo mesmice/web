@@ -10,4 +10,11 @@ describe('Spinner', () => {
 
     expect(screen.getByRole('status', { name: 'Entrando' })).toBeTruthy();
   });
+
+  it('pode ser decorativo em controles que já possuem nome', () => {
+    const { container } = render(<Spinner decorative />);
+
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(container.querySelector('[aria-hidden="true"]')).toBeTruthy();
+  });
 });
