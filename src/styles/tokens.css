@@ -34,6 +34,12 @@
   --color-focus: #4f46e5;
   --color-success: #12b76a;
   --color-danger: #f04438;
+  --color-control-bg: var(--color-brand-white);
+  --color-control-border: var(--color-brand-lilac);
+  --color-control-text: var(--color-brand-deep-purple);
+  --color-control-placeholder: #8e7dbd;
+  --color-control-focus: var(--color-brand-purple);
+  --color-control-focus-ring: var(--color-brand-lilac);
 }
 
 [data-theme='dark'] {

@@ -134,8 +134,8 @@ test('rota de login responde', async ({ page }) => {
 test('login destaca campos vazios ao tentar entrar', async ({ page }) => {
   await page.goto('/login');
   await page.getByRole('button', { name: 'Entrar' }).click();
-  await expect(page.getByPlaceholder(/voce@exemplo.com/)).toHaveClass(/border-red-500/);
-  await expect(page.getByPlaceholder('Sua senha')).toHaveClass(/border-red-500/);
+  await expect(page.getByPlaceholder(/voce@exemplo.com/)).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.getByPlaceholder('Sua senha')).toHaveAttribute('aria-invalid', 'true');
 });
 
 test('cadastro permite montar um perfil em etapas', async ({ page }) => {

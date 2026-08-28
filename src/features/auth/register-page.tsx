@@ -3,7 +3,8 @@ import type { ChangeEvent, FormEvent, PointerEvent } from 'react';
 import { Check, ImagePlus, Mail, Smartphone, Upload, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AuthBackdrop } from '../../components/ui/auth-backdrop.js';
-import { Input, INPUT_CLASS } from '../../components/ui/input.js';
+import { Input } from '../../components/ui/input.js';
+import { Textarea } from '../../components/ui/textarea.js';
 import { Checkbox } from '../../components/ui/checkbox.js';
 import './register-page.css';
 
@@ -209,7 +210,7 @@ function AccountStep({
       <label className="block text-xs font-bold uppercase tracking-wide text-[#2b1861]">
         Como podemos chamar você?
         <Input
-          className={`${showErrors && !data.name.trim() ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+          error={showErrors && !data.name.trim()}
           value={data.name}
           onChange={(event) => onChange('name', event.target.value)}
           placeholder="Seu nome"
@@ -221,7 +222,7 @@ function AccountStep({
       <label className="block text-xs font-bold uppercase tracking-wide text-[#2b1861]">
         Nome de usuário
         <Input
-          className={`${showErrors && !data.username.trim() ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+          error={showErrors && !data.username.trim()}
           value={data.username}
           onChange={(event) => onChange('username', event.target.value.trim().toLowerCase())}
           placeholder="como_te_encontram_no_mesmice"
@@ -271,7 +272,7 @@ function AccountStep({
             </select>
           )}
           <Input
-            className={`${showErrors && !data.contact.trim() ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+            error={showErrors && !data.contact.trim()}
             value={data.contact}
             onChange={(event) =>
               onChange(
@@ -294,7 +295,7 @@ function AccountStep({
         <label className="block text-xs font-bold uppercase tracking-wide text-[#2b1861]">
           Crie uma senha
           <Input
-            className={`${showErrors && data.password.trim().length < 8 ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+            error={showErrors && data.password.trim().length < 8}
             value={data.password}
             onChange={(event) => onChange('password', event.target.value)}
             type="password"
@@ -312,7 +313,7 @@ function AccountStep({
         <label className="block text-xs font-bold uppercase tracking-wide text-[#2b1861]">
           Confirme sua senha
           <Input
-            className={`${showErrors && data.password !== data.confirmPassword ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+            error={showErrors && data.password !== data.confirmPassword}
             value={data.confirmPassword}
             onChange={(event) => onChange('confirmPassword', event.target.value)}
             type="password"
@@ -560,8 +561,8 @@ function ProfileStep({
 
           <label className="mt-6 block text-xs font-bold uppercase tracking-wide text-[#2b1861]">
             Sobre você <span className="font-normal normal-case text-[#8e7dbd]">(opcional)</span>
-            <textarea
-              className={`${INPUT_CLASS} min-h-[92px] resize-none`}
+            <Textarea
+              className="resize-none"
               value={data.about}
               onChange={(event) => onAboutChange(event.target.value.slice(0, ABOUT_MAX_LENGTH))}
               maxLength={ABOUT_MAX_LENGTH}

@@ -27,7 +27,7 @@
 
 .btn--primary {
   background: var(--color-accent);
-  color: #ffffff;
+  color: var(--color-brand-white);
 }
 
 .btn--primary:hover:not(:disabled) {

@@ -172,7 +172,8 @@ export function LoginPage() {
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8e7dbd]"
                 />
                 <Input
-                  className={`pl-10 ${submitted && !email.trim() ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+                  className="pl-10"
+                  error={submitted && !email.trim()}
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   type="text"
@@ -190,7 +191,8 @@ export function LoginPage() {
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8e7dbd]"
                 />
                 <Input
-                  className={`pr-11 pl-10 ${submitted && !password.trim() ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+                  className="pr-11 pl-10"
+                  error={submitted && !password.trim()}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   type={showPassword ? 'text' : 'password'}
