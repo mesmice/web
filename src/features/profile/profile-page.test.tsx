@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { server } from '../../mocks/node.js'
 import { MOCK_USER } from '../../mocks/test-handlers.js'
 import { ProfilePage } from './profile-page.js'
-import { profileQueryKeys } from './queries/use-my-profile.js'
+import { profileKeys } from './api/profile-query-keys.js'
 
 function renderProfile(): QueryClient {
   const queryClient = new QueryClient({
@@ -33,7 +33,7 @@ describe('ProfilePage', () => {
     const queryClient = renderProfile()
 
     expect(screen.getByRole('status', { name: 'Carregando perfil' })).toBeDefined()
-    expect(queryClient.getQueryCache().find({ queryKey: profileQueryKeys.me() })).toBeDefined()
+    expect(queryClient.getQueryCache().find({ queryKey: profileKeys.me() })).toBeDefined()
   })
 
   it('compõe header, identidade, bio e links com os dados do usuário', async () => {
@@ -59,6 +59,9 @@ describe('ProfilePage', () => {
     expect(screen.getByRole('heading', { name: 'Links' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Site pessoal' })).toBeDefined()
     expect(screen.getByRole('img', { name: 'Avatar de Maria Souza' })).toBeDefined()
+    expect(document.querySelector<HTMLImageElement>('.profile-header__banner-image')?.src).toBe(
+      'https://cdn.example.com/banner.png'
+    )
   })
 
   it('trata campos opcionais ausentes sem quebrar a composição', async () => {
@@ -70,6 +73,30 @@ describe('ProfilePage', () => {
     expect(screen.getByText('Nenhuma bio adicionada.')).toBeDefined()
     expect(screen.getByText('Nenhum link adicionado.')).toBeDefined()
     expect(screen.queryByRole('img')).toBeNull()
+    expect(document.querySelector('.profile-header__banner')).not.toBeNull()
+    expect(document.querySelector('.profile-header__banner-image')).toBeNull()
+  })
+
+  it.each([null, '', '   '])('mostra o fallback quando a bio é %j', async (bio) => {
+    server.use(
+      http.get('*/api/v1/users/me', () =>
+        HttpResponse.json({ user: { ...MOCK_USER, bio } })
+      )
+    )
+    renderProfile()
+
+    expect(await screen.findByText('Nenhuma bio adicionada.')).toBeDefined()
+  })
+
+  it('mostra o conteúdo de uma bio real', async () => {
+    server.use(
+      http.get('*/api/v1/users/me', () =>
+        HttpResponse.json({ user: { ...MOCK_USER, bio: '  Uma bio real.  ' } })
+      )
+    )
+    renderProfile()
+
+    expect(await screen.findByText('Uma bio real.')).toBeDefined()
   })
 
   it('mostra erro e refaz apenas a query ao tentar novamente', async () => {
