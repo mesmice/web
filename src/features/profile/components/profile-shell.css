@@ -1,0 +1,25 @@
+.profile-shell {
+  width: min(100%, 960px);
+  margin-inline: auto;
+}
+
+.profile-shell__content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.55fr);
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+}
+
+.profile-shell__primary,
+.profile-shell__secondary {
+  display: grid;
+  align-content: start;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .profile-shell__content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
