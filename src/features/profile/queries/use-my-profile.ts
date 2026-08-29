@@ -1,15 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { getMe } from '../../../lib/api/endpoints.js'
-
-export const profileQueryKeys = {
-  all: ['profile'] as const,
-  me: () => [...profileQueryKeys.all, 'me'] as const
-}
+import { getMyProfile } from '../api/profile-endpoints.js'
+import { profileKeys } from '../api/profile-query-keys.js'
 
 export function useMyProfile() {
   return useQuery({
-    queryKey: profileQueryKeys.me(),
-    queryFn: getMe,
-    select: (response) => response.user
+    queryKey: profileKeys.me(),
+    queryFn: getMyProfile
   })
 }

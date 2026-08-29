@@ -4,11 +4,13 @@ import './profile-section.css'
 type ProfileAboutProps = Pick<PrivateUser, 'bio'>
 
 export function ProfileAbout({ bio }: ProfileAboutProps) {
+  const normalizedBio = bio?.trim()
+
   return (
     <section className="profile-section" aria-labelledby="profile-about-title">
       <h2 id="profile-about-title">Sobre</h2>
-      <p className={bio ? undefined : 'profile-section__empty'}>
-        {bio ?? 'Nenhuma bio adicionada.'}
+      <p className={normalizedBio ? undefined : 'profile-section__empty'}>
+        {normalizedBio || 'Nenhuma bio adicionada.'}
       </p>
     </section>
   )

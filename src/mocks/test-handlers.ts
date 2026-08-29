@@ -80,5 +80,14 @@ export const authTestHandlers = [
       return authError(401, 'UNAUTHORIZED', 'Autenticação obrigatória.')
     }
     return HttpResponse.json({ user: MOCK_USER })
+  }),
+
+  http.patch('*/api/v1/users/me', async ({ request }) => {
+    const authorization = request.headers.get('authorization')
+    if (!authorization?.startsWith('Bearer ')) {
+      return authError(401, 'UNAUTHORIZED', 'Autenticação obrigatória.')
+    }
+    const updates = (await request.json()) as Partial<PrivateUser>
+    return HttpResponse.json({ user: { ...MOCK_USER, ...updates } })
   })
 ]
