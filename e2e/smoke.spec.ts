@@ -131,6 +131,55 @@ test('rota de login responde', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Bem-vindo de volta!' })).toBeVisible();
 });
 
+test('rota de perfil redireciona visitante anônimo ao login', async ({ page }) => {
+  await page.goto('/profile');
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole('heading', { name: 'Bem-vindo de volta!' })).toBeVisible();
+});
+
+test('usuário autenticado acessa o perfil sem overflow no mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => localStorage.setItem('mesmice.refresh', 'saved-refresh'));
+  await page.route('**/api/v1/auth/refresh', async (route) => {
+    await route.fulfill({
+      json: { accessToken: 'profile-access', refreshToken: 'rotated-refresh' }
+    });
+  });
+  await page.route('**/api/v1/users/me', async (route) => {
+    await route.fulfill({
+      json: {
+        user: {
+          id: '9000000000000000001',
+          username: 'maria',
+          displayName: 'Maria Souza',
+          bio: null,
+          avatarUrl: null,
+          avatarThumbUrl: null,
+          bannerUrl: null,
+          externalLinks: [],
+          profileTheme: null,
+          avatarFrameUrl: null,
+          profileColor: null,
+          badges: [],
+          presence: 'online',
+          lastActiveAt: '2026-01-01T12:00:00.000Z',
+          createdAt: '2026-01-01T12:00:00.000Z',
+          email: 'maria@example.com',
+          emailVerified: true
+        }
+      }
+    });
+  });
+
+  await page.goto('/profile');
+
+  await expect(page.getByRole('heading', { name: 'Maria Souza' })).toBeVisible();
+  await expect(page.getByText('Nenhuma bio adicionada.')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    await page.evaluate(() => document.documentElement.clientWidth)
+  );
+});
+
 test('login destaca campos vazios ao tentar entrar', async ({ page }) => {
   await page.goto('/login');
   await page.getByRole('button', { name: 'Entrar' }).click();

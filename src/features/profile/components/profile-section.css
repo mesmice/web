@@ -1,0 +1,56 @@
+.profile-section {
+  min-width: 0;
+  padding: var(--space-6);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-elevated);
+}
+
+.profile-section h1 {
+  overflow-wrap: anywhere;
+  font-family: var(--font-family-display);
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+}
+
+.profile-section h2 {
+  margin-bottom: var(--space-4);
+  font-size: 1.125rem;
+}
+
+.profile-section p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.profile-identity__username {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+}
+
+.profile-section__empty {
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+
+.profile-links {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile-links a {
+  display: block;
+  overflow: hidden;
+  color: var(--color-action-primary);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-links a:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
