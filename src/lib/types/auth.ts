@@ -11,6 +11,17 @@ export interface TokenPair {
 
 export type UserPresence = 'online' | 'idle' | 'dnd' | 'invisible'
 
+export interface ExternalLink {
+  label: string
+  url: string
+}
+
+export interface ProfileBadge {
+  code: string
+  name: string
+  grantedAt: string
+}
+
 /** Usuário retornado para o próprio dono (`/users/me`, login, registro). */
 export interface PrivateUser {
   id: string
@@ -18,7 +29,15 @@ export interface PrivateUser {
   displayName: string
   bio: string | null
   avatarUrl: string | null
+  avatarThumbUrl: string | null
+  bannerUrl: string | null
+  externalLinks: ExternalLink[]
+  profileTheme: string | null
+  avatarFrameUrl: string | null
+  profileColor: string | null
+  badges: ProfileBadge[]
   presence: UserPresence
+  lastActiveAt: string
   createdAt: string
   email: string
   emailVerified: boolean

@@ -2,9 +2,10 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { http, HttpResponse } from 'msw'
 import { server } from '../mocks/node.js'
 import { apiFetch } from '../lib/api/client.js'
-import { signOut } from '../lib/auth/session.js'
+import { restoreSession, signOut } from '../lib/auth/session.js'
 import { useAuthStore } from '../stores/auth-store.js'
 import { getSavedRefreshToken, saveRefreshToken } from '../lib/auth/session-persistence.js'
+import { MOCK_USER } from '../mocks/test-handlers.js'
 
 const REFRESH_KEY = 'mesmice.refresh'
 
@@ -160,5 +161,50 @@ describe('signOut', () => {
     expect(state.status).toBe('anonymous')
     expect(state.sessionEnd).toBe('logout')
     expect(localStorage.getItem(REFRESH_KEY)).toBeNull()
+  })
+})
+
+describe('restoreSession', () => {
+  it('restaura tokens e usuário canônico antes de autenticar a store', async () => {
+    saveRefreshToken('saved-refresh')
+    server.use(
+      http.post('*/api/v1/auth/refresh', () =>
+        HttpResponse.json({ accessToken: 'restored-access', refreshToken: 'rotated-refresh' })
+      ),
+      http.get('*/api/v1/users/me', ({ request }) => {
+        expect(request.headers.get('authorization')).toBe('Bearer restored-access')
+        return HttpResponse.json({ user: MOCK_USER })
+      })
+    )
+
+    await restoreSession()
+
+    expect(useAuthStore.getState()).toMatchObject({
+      status: 'authenticated',
+      accessToken: 'restored-access',
+      user: MOCK_USER
+    })
+    expect(getSavedRefreshToken()).toBe('rotated-refresh')
+  })
+
+  it('limpa uma sessão persistida inválida', async () => {
+    saveRefreshToken('invalid-refresh')
+    server.use(
+      http.post('*/api/v1/auth/refresh', () =>
+        HttpResponse.json(
+          { error: { code: 'SESSION_EXPIRED', message: 'Sessão expirada.' } },
+          { status: 401 }
+        )
+      )
+    )
+
+    await restoreSession()
+
+    expect(useAuthStore.getState()).toMatchObject({
+      status: 'anonymous',
+      accessToken: null,
+      user: null
+    })
+    expect(getSavedRefreshToken()).toBeNull()
   })
 })
