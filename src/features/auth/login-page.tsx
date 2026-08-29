@@ -6,10 +6,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { login } from '../../lib/api/endpoints.js';
 import { ApiRequestError } from '../../lib/api/client.js';
+import { applyAuthenticatedSession } from '../../lib/auth/session.js';
 import { Spinner } from '../../components/ui/spinner.js';
 import { AuthBackdrop } from '../../components/ui/auth-backdrop.js';
 import { Input } from '../../components/ui/input.js';
-import { Checkbox } from '../../components/ui/checkbox.js';
 import './login-page.css';
 
 function WaveText({ children }: { children: string }) {
@@ -29,7 +29,6 @@ function WaveText({ children }: { children: string }) {
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const [rememberMe, setRememberMe] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,7 +39,10 @@ export function LoginPage() {
   const mascotTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loginMutation = useMutation({
     mutationFn: login,
-    onSuccess: () => navigate('/')
+    onSuccess: ({ accessToken, refreshToken, user }) => {
+      applyAuthenticatedSession({ accessToken, refreshToken }, user);
+      navigate('/');
+    }
   });
 
   useEffect(() => {
@@ -78,7 +80,7 @@ export function LoginPage() {
     setSubmitted(true);
     if (!email.trim() || !password.trim() || loginMutation.isPending) return;
 
-    loginMutation.mutate({ identifier: email.trim(), password, rememberMe });
+    loginMutation.mutate({ identifier: email.trim(), password });
   }
 
   const errorMessage =
@@ -165,7 +167,7 @@ export function LoginPage() {
 
           <form className="space-y-5" noValidate onSubmit={handleSubmit}>
             <label className="block text-xs font-bold uppercase tracking-wide text-[#2b1861]">
-              E-mail ou número de telefone
+              E-mail ou nome de usuário
               <span className="relative block">
                 <Mail
                   size={17}
@@ -177,7 +179,7 @@ export function LoginPage() {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   type="text"
-                  placeholder="voce@exemplo.com ou (11) 99999-9999"
+                  placeholder="voce@exemplo.com ou username"
                   autoComplete="username"
                   required
                 />
@@ -215,13 +217,6 @@ export function LoginPage() {
               >
                 Esqueceu a senha?
               </Link>
-            </label>
-            <label className="flex cursor-pointer items-center gap-3 text-sm text-[#66568d]">
-              <Checkbox
-                checked={rememberMe}
-                onChange={(event) => setRememberMe(event.target.checked)}
-              />
-              Lembrar de mim
             </label>
             <button
               type="submit"

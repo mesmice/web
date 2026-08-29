@@ -1,3 +1,5 @@
+import type { PrivateUser, TokenPair } from './auth.js';
+
 export type ErrorCode =
   | 'VALIDATION_ERROR'
   | 'UNAUTHORIZED'
@@ -25,18 +27,10 @@ export interface ReadinessReport {
 export interface LoginPayload {
   identifier: string;
   password: string;
-  rememberMe: boolean;
 }
 
-export interface AuthSession {
-  accessToken: string;
-  refreshToken?: string;
-  expiresAt?: string;
-  user: {
-    id: string;
-    name: string;
-    username: string;
-  };
+export interface AuthSession extends TokenPair {
+  user: PrivateUser;
 }
 
 export interface PasswordResetRequestPayload {
