@@ -145,7 +145,7 @@ export function ProfileAbout({ bio, isOwner, onSave }: ProfileAboutProps) {
   return (
     <div className="mt-3 w-full">
       <h2 className="mb-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-(--color-text-muted)]">
-        Bio
+        Sobre
       </h2>
 
       {isEditing ? (
