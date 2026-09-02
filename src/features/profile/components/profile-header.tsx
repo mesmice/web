@@ -1,10 +1,12 @@
-import type { PrivateUser } from '../../../lib/types/auth.js'
-import './profile-header.css'
+import { Pencil } from 'lucide-react';
+import { Button } from '../../../components/ui/button.js';
+import type { PrivateUser } from '../../../lib/types/auth.js';
+import './profile-header.css';
 
-type ProfileHeaderProps = Pick<PrivateUser, 'avatarUrl' | 'bannerUrl' | 'displayName'>
+type ProfileHeaderProps = Pick<PrivateUser, 'avatarUrl' | 'bannerUrl' | 'displayName'>;
 
 function getAvatarFallback(displayName: string): string {
-  return displayName.trim().charAt(0).toLocaleUpperCase() || '?'
+  return displayName.trim().charAt(0).toLocaleUpperCase() || '?';
 }
 
 export function ProfileHeader({ avatarUrl, bannerUrl, displayName }: ProfileHeaderProps) {
@@ -20,6 +22,15 @@ export function ProfileHeader({ avatarUrl, bannerUrl, displayName }: ProfileHead
           <span aria-label={`Avatar de ${displayName}`}>{getAvatarFallback(displayName)}</span>
         )}
       </div>
+      <Button
+        type="button"
+        className="profile-header__edit"
+        disabled
+        title="Edição de perfil ainda não disponível"
+      >
+        <Pencil size={15} aria-hidden="true" />
+        Editar perfil
+      </Button>
     </header>
-  )
+  );
 }

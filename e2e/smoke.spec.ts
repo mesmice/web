@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 test('app carrega e mostra a home', async ({ page }) => {
   await page.goto('/');
@@ -137,8 +137,7 @@ test('rota de perfil redireciona visitante anônimo ao login', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'Bem-vindo de volta!' })).toBeVisible();
 });
 
-test('usuário autenticado acessa o perfil sem overflow no mobile', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+async function mockAuthenticatedProfile(page: Page) {
   await page.addInitScript(() => localStorage.setItem('mesmice.refresh', 'saved-refresh'));
   await page.route('**/api/v1/auth/refresh', async (route) => {
     await route.fulfill({
@@ -152,14 +151,14 @@ test('usuário autenticado acessa o perfil sem overflow no mobile', async ({ pag
           id: '9000000000000000001',
           username: 'maria',
           displayName: 'Maria Souza',
-          bio: null,
-          avatarUrl: null,
+          bio: 'Construindo comunidades com cuidado e criando espaços para boas conversas.',
+          avatarUrl: '/images/auth/mascote-neutro-lightmode.png',
           avatarThumbUrl: null,
-          bannerUrl: null,
-          externalLinks: [],
+          bannerUrl: '/images/landing-page/what-is/community-card.png',
+          externalLinks: [{ label: 'Site pessoal', url: 'https://example.com' }],
           profileTheme: null,
           avatarFrameUrl: null,
-          profileColor: null,
+          profileColor: '#8b5cf6',
           badges: [],
           presence: 'online',
           lastActiveAt: '2026-01-01T12:00:00.000Z',
@@ -170,14 +169,89 @@ test('usuário autenticado acessa o perfil sem overflow no mobile', async ({ pag
       }
     });
   });
+}
 
+test('usuário autenticado acessa o perfil sem overflow no mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockAuthenticatedProfile(page);
   await page.goto('/profile');
 
+  await expect(page).toHaveURL(/\/profile$/);
   await expect(page.getByRole('heading', { name: 'Maria Souza' })).toBeVisible();
-  await expect(page.getByText('Nenhuma bio adicionada.')).toBeVisible();
+  await expect(page.getByText(/Construindo comunidades/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Personalizar perfil' })).toBeHidden();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     await page.evaluate(() => document.documentElement.clientWidth)
   );
+});
+
+test('perfil local preserva hierarquia e mídia no desktop', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await mockAuthenticatedProfile(page);
+  await page.goto('/profile');
+
+  await expect(page.getByRole('heading', { name: 'Maria Souza' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Avatar de Maria Souza' })).toBeVisible();
+  await expect(page.locator('.profile-header__banner-image')).toBeVisible();
+  await expect(page.getByRole('link', { name: /Site pessoal/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Personalizar perfil' })).toBeVisible();
+  await expect(page.getByText('128 amigos')).toBeVisible();
+  await expect(page.locator('.profile-meta')).toHaveCSS('border-width', '0px');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    await page.evaluate(() => document.documentElement.clientWidth)
+  );
+});
+
+for (const viewport of [
+  { width: 375, height: 844 },
+  { width: 430, height: 932 },
+  { width: 1920, height: 1080 }
+]) {
+  test(`perfil permanece responsivo em ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await mockAuthenticatedProfile(page);
+    await page.goto('/profile');
+
+    await expect(page.getByRole('heading', { name: 'Maria Souza' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Conexões' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Destaque' })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      await page.evaluate(() => document.documentElement.clientWidth)
+    );
+  });
+}
+
+test('tema do Profile permanece independente do App Theme no browser', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await mockAuthenticatedProfile(page);
+  await page.goto('/profile');
+
+  const primary = page.getByRole('textbox', { name: 'Cor principal hexadecimal' });
+  const secondary = page.getByRole('textbox', { name: 'Cor secundária hexadecimal' });
+  const shell = page.locator('.profile-shell');
+
+  for (const combination of [
+    { appTheme: 'light', primary: '#FFFFFF', secondary: '#E9E9EF' },
+    { appTheme: 'dark', primary: '#FFFFFF', secondary: '#E9E9EF' },
+    { appTheme: 'light', primary: '#080808', secondary: '#1E1028' },
+    { appTheme: 'dark', primary: '#080808', secondary: '#1E1028' },
+    { appTheme: 'light', primary: '#8B5CF6', secondary: '#D8CCFF' },
+    { appTheme: 'dark', primary: '#1D4ED8', secondary: '#93C5FD' }
+  ]) {
+    await primary.fill(combination.primary);
+    await secondary.fill(combination.secondary);
+    await page.evaluate((theme) => {
+      document.documentElement.dataset.theme = theme;
+    }, combination.appTheme);
+
+    await expect(shell).toHaveCSS('--profile-color-primary', combination.primary);
+    await expect(shell).toHaveCSS('--profile-color-secondary', combination.secondary);
+  }
+
+  await page.getByRole('radio', { name: 'Gradiente' }).check();
+  await page.getByRole('textbox', { name: 'Cor 1 hexadecimal' }).fill('#FFB6D9');
+  await page.getByRole('textbox', { name: 'Cor 2 hexadecimal' }).fill('#8B5CF6');
+  await expect(shell).toHaveAttribute('data-nickname-mode', 'gradient');
 });
 
 test('login destaca campos vazios ao tentar entrar', async ({ page }) => {
@@ -197,7 +271,9 @@ test('inputs com ícones preservam espaço para o conteúdo', async ({ page }) =
     await emailInput.evaluate((element) => Number.parseFloat(getComputedStyle(element).paddingLeft))
   ).toBeGreaterThan(32);
   expect(
-    await passwordInput.evaluate((element) => Number.parseFloat(getComputedStyle(element).paddingRight))
+    await passwordInput.evaluate((element) =>
+      Number.parseFloat(getComputedStyle(element).paddingRight)
+    )
   ).toBeGreaterThan(40);
 });
 
