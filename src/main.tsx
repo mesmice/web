@@ -9,7 +9,7 @@ import { ThemeProvider } from './providers/theme-provider.js'
 import './styles/global.css'
 
 async function enableMocking(): Promise<void> {
-  if (import.meta.env.VITE_ENABLE_MOCKS !== 'true') return
+  if (!import.meta.env.DEV || import.meta.env.VITE_ENABLE_MOCKS !== 'true') return
   const { worker } = await import('./mocks/browser.js')
   await worker.start({ onUnhandledRequest: 'bypass' })
 }
