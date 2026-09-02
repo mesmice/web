@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { PrivateUser } from '../../lib/types/auth.js';
+import { useAuthStore } from '../../stores/auth-store.js';
 import { ProfileAbout } from './components/profile-about.js';
 import { ProfileCustomizer } from './components/profile-customizer.js';
 import { ProfileHeader } from './components/profile-header.js';
@@ -12,7 +13,8 @@ import { ProfileShell } from './components/profile-shell.js';
 import {
   PROFILE_DEMO_FRIENDS_COUNT,
   PROFILE_DEMO_HIGHLIGHT,
-  PROFILE_DEMO_TAGLINE
+  PROFILE_DEMO_TAGLINE,
+  PROFILE_DEMO
 } from './profile-demo-data.js';
 import { useMyProfile } from './queries/use-my-profile.js';
 import './profile-page.css';
@@ -114,7 +116,7 @@ export function ProfileExperience({
   );
 }
 
-export function ProfilePage() {
+function AuthenticatedProfilePage() {
   const profileQuery = useMyProfile();
 
   if (profileQuery.isPending) return <ProfileLoading />;
@@ -128,4 +130,14 @@ export function ProfilePage() {
   }
 
   return <ProfileExperience profile={profileQuery.data} />;
+}
+
+export function ProfilePage() {
+  const isAuthenticated = useAuthStore((state) => state.status === 'authenticated');
+
+  return isAuthenticated ? (
+    <AuthenticatedProfilePage />
+  ) : (
+    <ProfileExperience profile={PROFILE_DEMO} />
+  );
 }
