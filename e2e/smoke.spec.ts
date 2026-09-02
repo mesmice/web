@@ -278,12 +278,43 @@ test('inputs com ícones preservam espaço para o conteúdo', async ({ page }) =
 });
 
 test('cadastro permite montar um perfil em etapas', async ({ page }) => {
+  let registerPayload: unknown;
+  await page.route('**/api/v1/auth/register', async (route) => {
+    registerPayload = route.request().postDataJSON();
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      json: {
+        accessToken: 'register-access',
+        refreshToken: 'register-refresh',
+        user: {
+          id: '9000000000000000002',
+          username: 'pessoa_mesmice',
+          displayName: 'Pessoa Mesmice',
+          bio: null,
+          avatarUrl: null,
+          avatarThumbUrl: null,
+          bannerUrl: null,
+          externalLinks: [],
+          profileTheme: null,
+          avatarFrameUrl: null,
+          profileColor: null,
+          badges: [],
+          presence: 'offline',
+          lastActiveAt: null,
+          createdAt: '2026-09-02T12:00:00.000Z',
+          email: 'pessoa@exemplo.com',
+          emailVerified: false
+        }
+      }
+    });
+  });
   await page.goto('/register');
   await expect(page.getByRole('heading', { name: 'Crie seu cantinho' })).toBeVisible();
   await page.getByPlaceholder('Seu nome').fill('Pessoa Mesmice');
   await page.getByPlaceholder('como_te_encontram_no_mesmice').fill('pessoa_mesmice');
   await page.getByPlaceholder('voce@exemplo.com').fill('pessoa@exemplo.com');
-  await page.getByPlaceholder('Pelo menos 8 caracteres').fill('senha-segura');
+  await page.getByPlaceholder('Pelo menos 10 caracteres').fill('senha-segura');
   await page.getByPlaceholder('Digite a senha novamente').fill('senha-segura');
   await page.getByRole('checkbox', { name: /termos de uso/ }).check();
   await page.getByRole('button', { name: 'Criar conta' }).click();
@@ -297,4 +328,13 @@ test('cadastro permite montar um perfil em etapas', async ({ page }) => {
   await page.getByRole('button', { name: 'Continuar' }).click();
   await page.getByRole('button', { name: 'Criar meu perfil' }).click();
   await expect(page.getByRole('heading', { name: 'Seu perfil está pronto!' })).toBeVisible();
+  expect(registerPayload).toEqual({
+    email: 'pessoa@exemplo.com',
+    username: 'pessoa_mesmice',
+    displayName: 'Pessoa Mesmice',
+    password: 'senha-segura'
+  });
+  expect(await page.evaluate(() => localStorage.getItem('mesmice.refresh'))).toBe(
+    'register-refresh'
+  );
 });
