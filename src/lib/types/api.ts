@@ -17,7 +17,19 @@ export interface ErrorEnvelope {
   };
 }
 
-export type PresenceStatus = 'online' | 'idle' | 'do_not_disturb' | 'offline';
+export type PresenceStatus = 'online' | 'idle' | 'dnd' | 'invisible' | 'offline';
+
+export type PublicUser = Omit<PrivateUser, 'email' | 'emailVerified' | 'presence'> & {
+  presence: PresenceStatus;
+};
+
+export interface UserSummary {
+  id: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  presence: PresenceStatus;
+}
 
 export interface ReadinessReport {
   status: 'ok' | 'degraded';
@@ -55,7 +67,7 @@ export interface PasswordResetRequestResponse {
 
 export type ServerMessage =
   | { type: 'pong'; sentAt?: number }
-  | { type: 'ready'; userId: string | null }
+  | { type: 'ready'; userId: string }
   | {
       type: 'message.created';
       payload: {
@@ -75,6 +87,7 @@ export type ServerMessage =
         containerType: 'conversation' | 'channel';
         authorId: string;
         content: string;
+        createdAt: string;
         editedAt: string;
       };
     }
@@ -85,14 +98,33 @@ export type ServerMessage =
   | {
       type: 'presence.update';
       payload: { userId: string; status: PresenceStatus };
-    };
+    }
+  | {
+      type: 'friend.request';
+      payload: { requestId: string; requester: UserSummary; createdAt: string };
+    }
+  | {
+      type: 'friend.accept';
+      payload: { userId: string; user: UserSummary; since: string };
+    }
+  | {
+      type: 'friend.remove';
+      payload: { userId: string; user: UserSummary };
+    }
+  | { type: 'user.update'; payload: { user: PublicUser } }
+  | { type: 'session.revoked'; payload: { sessionId: string } };
 
 export type ClientMessage = { type: 'ping'; sentAt?: number } | { type: 'identify'; token: string };
 
 export const GATEWAY_PATH = '/gateway';
 
 /**
- * Close code enviado pelo gateway ao revogar a sessão
- * (espelha `WS_CLOSE_CODES.SESSION_REVOKED` de @mesmice/contracts).
+ * Códigos de fechamento do gateway, espelhando `WS_CLOSE_CODES`
+ * de @mesmice/contracts.
  */
-export const WS_SESSION_REVOKED_CLOSE_CODE = 4402;
+export const WS_CLOSE_CODES = {
+  INVALID_JSON: 4400,
+  UNAUTHORIZED: 4401,
+  SESSION_REVOKED: 4402,
+  IDENTIFY_TIMEOUT: 4403
+} as const;

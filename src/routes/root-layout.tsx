@@ -6,6 +6,8 @@ import { useAuthStore } from '../stores/auth-store.js';
 import { gateway } from '../lib/ws/socket.js';
 import { useUiStore } from '../stores/ui-store.js';
 import { SessionWatcher } from '../components/system/session-watcher.js';
+import { refreshSession } from '../lib/api/client.js';
+import { clearPersistedSession } from '../lib/auth/session-persistence.js';
 import './root-layout.css';
 
 const STATUS_LABEL: Record<'connecting' | 'open' | 'closed', string> = {
@@ -26,15 +28,30 @@ export function RootLayout() {
   useEffect(() => {
     if (authStatus !== 'authenticated') return;
 
-    gateway.connect();
+    const getAccessToken = () => useAuthStore.getState().accessToken;
+    gateway.connect(getAccessToken);
     const unsubscribeStatus = gateway.onStatusChange(setGatewayStatus);
     const unsubscribeRevoked = gateway.onSessionRevoked(() => {
+      clearPersistedSession();
       useAuthStore.getState().clearSession('revoked');
+    });
+    const unsubscribeUnauthorized = gateway.onUnauthorized(() => {
+      void refreshSession().then((refreshed) => {
+        if (useAuthStore.getState().status !== 'authenticated') return;
+        if (refreshed) {
+          gateway.connect(getAccessToken);
+          return;
+        }
+
+        clearPersistedSession();
+        useAuthStore.getState().clearSession('expired');
+      });
     });
 
     return () => {
       unsubscribeStatus();
       unsubscribeRevoked();
+      unsubscribeUnauthorized();
       gateway.disconnect();
     };
   }, [authStatus, setGatewayStatus]);
