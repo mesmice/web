@@ -1,13 +1,15 @@
 import { apiFetch } from './client.js';
 import type {
-  AuthSession,
   LoginPayload,
   PasswordResetPayload,
   PasswordResetRequestPayload,
   PasswordResetRequestResponse,
-  ReadinessReport
+  ReadinessReport,
+  RegisterPayload
 } from '../types/api.js';
-import type { PrivateUser } from '../types/auth.js';
+import type { PrivateUser, TokenPair } from '../types/auth.js';
+
+type AuthResult = { user: PrivateUser } & TokenPair;
 
 export function getLiveness(): Promise<{ status: 'ok' }> {
   return apiFetch('/health/live');
@@ -17,8 +19,12 @@ export function getReadiness(): Promise<ReadinessReport> {
   return apiFetch('/health/ready');
 }
 
-export function login(payload: LoginPayload): Promise<AuthSession> {
+export function login(payload: LoginPayload): Promise<AuthResult> {
   return apiFetch('/auth/login', { method: 'POST', body: payload });
+}
+
+export function register(payload: RegisterPayload): Promise<AuthResult> {
+  return apiFetch('/auth/register', { method: 'POST', body: payload });
 }
 
 export function requestPasswordReset(

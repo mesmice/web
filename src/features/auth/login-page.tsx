@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { login } from '../../lib/api/endpoints.js';
 import { ApiRequestError } from '../../lib/api/client.js';
+import { applyAuthenticatedSession } from '../../lib/auth/session.js';
 import { Spinner } from '../../components/ui/spinner.js';
 import { AuthBackdrop } from '../../components/ui/auth-backdrop.js';
 import './login-page.css';
@@ -41,7 +42,13 @@ export function LoginPage() {
   const mascotTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loginMutation = useMutation({
     mutationFn: login,
-    onSuccess: () => navigate('/')
+    onSuccess: (data) => {
+      applyAuthenticatedSession(
+        { accessToken: data.accessToken, refreshToken: data.refreshToken },
+        data.user
+      );
+      navigate('/');
+    }
   });
 
   useEffect(() => {

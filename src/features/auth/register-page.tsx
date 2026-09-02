@@ -2,8 +2,15 @@ import { useState } from 'react';
 import type { ChangeEvent, FormEvent, PointerEvent } from 'react';
 import { Check, ImagePlus, Mail, Smartphone, Upload, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
+import { register } from '../../lib/api/endpoints.js';
+import { ApiRequestError } from '../../lib/api/client.js';
+import { applyAuthenticatedSession } from '../../lib/auth/session.js';
+import { Spinner } from '../../components/ui/spinner.js';
 import { AuthBackdrop } from '../../components/ui/auth-backdrop.js';
 import './register-page.css';
+
+const PASSWORD_MIN_LENGTH = 10;
 
 const BRAND = {
   purple: '#693de9',
@@ -83,12 +90,6 @@ type RegistrationData = {
   termsAccepted: boolean;
 };
 
-type RegistrationPayload = Omit<RegistrationData, 'password' | 'confirmPassword' | 'avatarUrl'> & {
-  password: string;
-  avatarPosition: { x: number; y: number };
-  avatar: { fileName: string; mimeType: string; dataUrl: string } | null;
-};
-
 const inputClass =
   'mt-2 w-full rounded-lg border border-[#cabeff] bg-white px-3 py-3 text-sm text-[#2b1861] outline-none transition placeholder:text-[#8e7dbd] focus:border-[#693de9] focus:ring-2 focus:ring-[#cabeff]';
 const optionClass =
@@ -141,20 +142,6 @@ function isUnderage(birthDate: string) {
     (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate());
   if (birthdayHasNotHappened) age -= 1;
   return age < 14;
-}
-
-function buildRegistrationPayload(
-  data: RegistrationData,
-  avatarPosition: { x: number; y: number }
-): RegistrationPayload {
-  return {
-    ...data,
-    birthDate: data.birthDate || '',
-    avatarPosition,
-    avatar: data.avatarUrl
-      ? { fileName: data.avatarFileName, mimeType: data.avatarMimeType, dataUrl: data.avatarUrl }
-      : null
-  };
 }
 
 function StepIndicator({ currentStep }: { currentStep: number }) {
@@ -243,9 +230,10 @@ function AccountStep({
           </button>
           <button
             type="button"
+            disabled
             aria-pressed={data.contactMethod === 'phone'}
-            onClick={() => onMethodChange('phone')}
-            className={`${optionClass} flex items-center justify-center gap-2 ${data.contactMethod === 'phone' ? 'border-[#693de9] bg-[#cabeff]/35 text-[#2b1861]' : 'border-[#cabeff] bg-white text-[#66568d]'}`}
+            title="Cadastro por celular ainda não está disponível — use e-mail."
+            className={`${optionClass} flex cursor-not-allowed items-center justify-center gap-2 border-[#cabeff] bg-white text-[#66568d] opacity-50`}
           >
             <Smartphone size={16} /> Celular
           </button>
@@ -292,18 +280,18 @@ function AccountStep({
         <label className="block text-xs font-bold uppercase tracking-wide text-[#2b1861]">
           Crie uma senha
           <input
-            className={`${inputClass} ${showErrors && data.password.trim().length < 8 ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+            className={`${inputClass} ${showErrors && data.password.trim().length < PASSWORD_MIN_LENGTH ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
             value={data.password}
             onChange={(event) => onChange('password', event.target.value)}
             type="password"
-            placeholder="Pelo menos 8 caracteres"
+            placeholder={`Pelo menos ${PASSWORD_MIN_LENGTH} caracteres`}
             autoComplete="new-password"
-            minLength={8}
+            minLength={PASSWORD_MIN_LENGTH}
             required
           />
-          {showErrors && data.password.trim().length < 8 && (
+          {showErrors && data.password.trim().length < PASSWORD_MIN_LENGTH && (
             <span className="mt-1 block text-xs font-bold text-red-600">
-              A senha deve ter pelo menos 8 caracteres.
+              A senha deve ter pelo menos {PASSWORD_MIN_LENGTH} caracteres.
             </span>
           )}
         </label>
@@ -742,13 +730,32 @@ export function RegisterPage() {
   function handleAvatarRemove() {
     setData((current) => ({ ...current, avatarUrl: '', avatarFileName: '', avatarMimeType: '' }));
   }
+  const registerMutation = useMutation({
+    mutationFn: register,
+    onSuccess: (result) => {
+      applyAuthenticatedSession(
+        { accessToken: result.accessToken, refreshToken: result.refreshToken },
+        result.user
+      );
+      setSubmitted(true);
+    }
+  });
+
+  const registerError =
+    registerMutation.error instanceof ApiRequestError
+      ? registerMutation.error.message
+      : registerMutation.error
+        ? 'Não foi possível criar sua conta agora. Tente novamente.'
+        : null;
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const accountIsValid =
       data.name.trim() &&
       data.username.trim() &&
       data.contact.trim() &&
-      data.password.trim().length >= 8 &&
+      data.contactMethod === 'email' &&
+      data.password.trim().length >= PASSWORD_MIN_LENGTH &&
       data.termsAccepted &&
       data.password === data.confirmPassword;
     const profileIsValid = data.birthDate && !isUnderage(data.birthDate);
@@ -760,11 +767,13 @@ export function RegisterPage() {
     if (step < STEPS.length - 1) {
       setStepDirection('forward');
       setStep((current) => current + 1);
-    } else {
-      const registrationPayload = buildRegistrationPayload(data, avatarPosition);
-      // Substituir este placeholder por uma mutation do cliente de API.
-      void registrationPayload;
-      setSubmitted(true);
+    } else if (!registerMutation.isPending) {
+      registerMutation.mutate({
+        email: data.contact.trim(),
+        username: data.username.trim(),
+        displayName: data.name.trim(),
+        password: data.password
+      });
     }
   }
 
@@ -871,17 +880,27 @@ export function RegisterPage() {
                 </button>
                 <button
                   type="submit"
+                  disabled={registerMutation.isPending}
                   className="auth-action-button rounded-lg bg-[#693de9] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#cabeff] transition focus:outline-none focus:ring-4 focus:ring-[#cabeff]"
                 >
-                  <WaveText>
-                    {step === 0
-                      ? 'Criar conta'
-                      : step === STEPS.length - 1
-                        ? 'Criar meu perfil'
-                        : 'Continuar'}
-                  </WaveText>
+                  {registerMutation.isPending ? (
+                    <Spinner label="Criando conta" />
+                  ) : (
+                    <WaveText>
+                      {step === 0
+                        ? 'Criar conta'
+                        : step === STEPS.length - 1
+                          ? 'Criar meu perfil'
+                          : 'Continuar'}
+                    </WaveText>
+                  )}
                 </button>
               </div>
+              {registerError && (
+                <p role="alert" className="mt-4 text-center text-sm font-bold text-red-600">
+                  {registerError}
+                </p>
+              )}
               <p className="mt-5 text-left text-sm text-[#66568d]">
                 Já possui uma conta?{' '}
                 <Link to="/login" className="font-bold text-[#693de9] hover:underline">

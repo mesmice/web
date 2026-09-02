@@ -28,6 +28,13 @@ export interface LoginPayload {
   rememberMe: boolean;
 }
 
+export interface RegisterPayload {
+  email: string;
+  username: string;
+  displayName?: string;
+  password: string;
+}
+
 export interface AuthSession {
   accessToken: string;
   refreshToken?: string;
