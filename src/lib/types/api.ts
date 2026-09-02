@@ -29,6 +29,13 @@ export interface LoginPayload {
   password: string;
 }
 
+export interface RegisterPayload {
+  email: string;
+  username: string;
+  displayName?: string;
+  password: string;
+}
+
 export interface AuthSession extends TokenPair {
   user: PrivateUser;
 }

@@ -5,7 +5,8 @@ import type {
   PasswordResetPayload,
   PasswordResetRequestPayload,
   PasswordResetRequestResponse,
-  ReadinessReport
+  ReadinessReport,
+  RegisterPayload
 } from '../types/api.js';
 import type { PrivateUser } from '../types/auth.js';
 
@@ -19,6 +20,10 @@ export function getReadiness(): Promise<ReadinessReport> {
 
 export function login(payload: LoginPayload): Promise<AuthSession> {
   return apiFetch('/auth/login', { method: 'POST', body: payload });
+}
+
+export function register(payload: RegisterPayload): Promise<AuthSession> {
+  return apiFetch('/auth/register', { method: 'POST', body: payload });
 }
 
 export function requestPasswordReset(
