@@ -26,8 +26,9 @@ export function Modal({ open, title, description, confirmLabel, onConfirm }: Mod
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const previousBodyOverflow = document.body.style.overflow;
     const isolatedElements = Array.from(document.body.children)
-      .filter((element): element is HTMLElement =>
-        element instanceof HTMLElement && element !== overlayRef.current
+      .filter(
+        (element): element is HTMLElement =>
+          element instanceof HTMLElement && element !== overlayRef.current
       )
       .map((element) => ({ element, inert: element.inert }));
 
