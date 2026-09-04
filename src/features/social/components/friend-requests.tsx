@@ -330,7 +330,7 @@ function RequestGroup({
             </div>
 
             <div className="flex items-center gap-2">
-              {!isReceivedGroup ? (
+              {isReceivedGroup ? (
                 <ActionButton
                   onClick={() => onAccept?.(friend)}
                   className="hover:border-emerald-400 hover:bg-emerald-500"
