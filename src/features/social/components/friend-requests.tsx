@@ -31,19 +31,6 @@ interface FriendRequestsProps {
   onViewProfile?: (friend: FriendRequestItem) => void;
 }
 
-interface FriendRequestApiShape {
-  id?: string | number | null;
-  displayName?: string | null;
-  name?: string | null;
-  username?: string | null;
-  avatarUrl?: string | null;
-  status?: FriendRequestStatus | string | null;
-  mutualFriends?: number | null;
-  message?: string | null;
-  requestedAtLabel?: string | null;
-  accentColor?: string | null;
-}
-
 const FALLBACK_COLORS = [
   'from-violet-500 to-indigo-500',
   'from-fuchsia-500 to-pink-500',
@@ -51,14 +38,6 @@ const FALLBACK_COLORS = [
   'from-emerald-500 to-teal-500',
   'from-orange-500 to-amber-500'
 ];
-
-function safeStatus(value?: FriendRequestStatus | string | null): FriendRequestStatus {
-  if (value === 'pending' || value === 'accepted' || value === 'declined') {
-    return value;
-  }
-
-  return 'pending';
-}
 
 function getInitials(name: string) {
   return (
@@ -77,22 +56,6 @@ function getAvatarClass(color?: string | null) {
   if (color) return `bg-gradient-to-br ${color}`;
   const index = Math.abs(Math.round((color?.length ?? 0) % FALLBACK_COLORS.length));
   return `bg-gradient-to-br ${FALLBACK_COLORS[index]}`;
-}
-
-export function mapFriendRequestFromApi(raw: FriendRequestApiShape): FriendRequestItem {
-  const displayName = raw.displayName ?? raw.name ?? 'Nova solicitação';
-
-  return {
-    id: String(raw.id ?? displayName),
-    displayName,
-    username: raw.username ?? null,
-    avatarUrl: raw.avatarUrl ?? null,
-    status: safeStatus(raw.status),
-    mutualFriends: raw.mutualFriends ?? null,
-    message: raw.message ?? null,
-    requestedAtLabel: raw.requestedAtLabel ?? null,
-    accentColor: raw.accentColor ?? null
-  };
 }
 
 function ActionButton({
@@ -330,7 +293,7 @@ function RequestGroup({
             </div>
 
             <div className="flex items-center gap-2">
-              {!isReceivedGroup ? (
+              {isReceivedGroup ? (
                 <ActionButton
                   onClick={() => onAccept?.(friend)}
                   className="hover:border-emerald-400 hover:bg-emerald-500"

@@ -21,16 +21,6 @@ interface BlockedListProps {
   onViewProfile?: (person: BlockedListItem) => void;
 }
 
-interface BlockedApiShape {
-  id?: string | number | null;
-  displayName?: string | null;
-  name?: string | null;
-  username?: string | null;
-  avatarUrl?: string | null;
-  accentColor?: string | null;
-  isBlocked?: boolean | null;
-}
-
 const FALLBACK_COLORS = [
   'from-violet-500 to-indigo-500',
   'from-fuchsia-500 to-pink-500',
@@ -56,19 +46,6 @@ function getAvatarClass(color: string | null | undefined, name: string) {
   if (color) return `bg-gradient-to-br ${color}`;
   const index = Math.abs(name.length % FALLBACK_COLORS.length);
   return `bg-gradient-to-br ${FALLBACK_COLORS[index]}`;
-}
-
-export function mapBlockedListItemFromApi(rawPerson: BlockedApiShape): BlockedListItem {
-  const displayName = rawPerson.displayName ?? rawPerson.name ?? 'Pessoa';
-
-  return {
-    id: String(rawPerson.id ?? displayName),
-    displayName,
-    username: rawPerson.username ?? null,
-    avatarUrl: rawPerson.avatarUrl ?? null,
-    accentColor: rawPerson.accentColor ?? null,
-    isBlocked: rawPerson.isBlocked ?? true
-  };
 }
 
 function PersonAvatar({ person }: { person: BlockedListItem }) {

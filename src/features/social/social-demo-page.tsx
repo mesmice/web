@@ -1,88 +1,98 @@
 import { useMemo, useState } from 'react';
-import { FriendList, type FriendListItem, mapFriendFromApi } from './components/friend-list.js';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuthStore } from '../../stores/auth-store.js';
 import {
-  FriendRequests,
-  type FriendRequestItem,
-  mapFriendRequestFromApi
-} from './components/friend-requests.js';
+  acceptFriendRequest,
+  declineFriendRequest,
+  getFriendRequests,
+  getFriends,
+  type SocialUser
+} from '../../lib/api/endpoints.js';
+import type { ApiRequestError } from '../../lib/api/client.js';
+import { FriendList, type FriendListItem } from './components/friend-list.js';
+import { mapFriendFromApi } from './components/friend-list-mapper.js';
+import { FriendRequests } from './components/friend-requests.js';
+import { mapFriendRequestFromApi } from './components/friend-request-mapper.js';
 import { SocialNavigation, type SocialTab } from './components/social-navigation.js';
+import { ConversationPanel } from '../messages/components/conversation-panel.js';
 
-const demoFriends: FriendListItem[] = [
-  mapFriendFromApi({
-    id: 1,
-    displayName: 'Maria Souza',
-    username: 'maria.dev',
-    status: 'online',
-    bio: 'Product designer e apaixonada por interfaces humanas.',
-    mutualFriends: 12,
-    isFollowing: true,
-    lastActiveLabel: 'Disponível agora'
-  }),
-  mapFriendFromApi({
-    id: 2,
-    displayName: 'João Pereira',
-    username: 'joao.codes',
-    status: 'away',
-    bio: 'Construindo experiências com foco em performance e DX.',
-    mutualFriends: 7,
-    isFollowing: false,
-    lastActiveLabel: 'Há 8 minutos'
-  }),
-  mapFriendFromApi({
-    id: 3,
-    displayName: 'Ana Costa',
-    username: 'ana.ux',
-    status: 'busy',
-    bio: 'Mentora de produto e amante de research sênior.',
-    mutualFriends: 4,
-    isFollowing: true,
-    lastActiveLabel: 'Em reunião'
-  })
-];
+function getErrorMessage(error: unknown) {
+  return error && typeof error === 'object' && 'message' in error
+    ? String((error as ApiRequestError).message)
+    : 'Tente novamente em alguns instantes.';
+}
 
-const receivedRequests: FriendRequestItem[] = [
-  mapFriendRequestFromApi({
-    id: 101,
-    displayName: 'Ari Costa',
-    username: 'ari.design',
-    mutualFriends: 8,
-    message: 'Quero trocar ideias de produto e explorar algumas ideias em comum.',
-    requestedAtLabel: 'Há 2 horas'
-  }),
-  mapFriendRequestFromApi({
-    id: 102,
-    displayName: 'Luan Silva',
-    username: 'luan.dev',
-    mutualFriends: 5,
-    message: 'Vamos colaborar em um projeto de comunidade e eventos.',
-    requestedAtLabel: 'Hoje'
-  })
-];
+function mapPresenceToStatus(presence: SocialUser['presence']): FriendListItem['status'] {
+  if (presence === 'online') return 'online';
+  if (presence === 'dnd') return 'busy';
+  if (presence === 'idle') return 'away';
+  return 'offline';
+}
 
-const sentRequests: FriendRequestItem[] = [
-  mapFriendRequestFromApi({
-    id: 201,
-    displayName: 'Nina Rocha',
-    username: 'nina.codes',
-    mutualFriends: 11,
-    message: 'Preciso de feedback no meu portfólio e no meu app de pesquisa.',
-    requestedAtLabel: 'Ontem'
-  }),
-  mapFriendRequestFromApi({
-    id: 202,
-    displayName: 'Mateus Lima',
-    username: 'mateus.ui',
-    mutualFriends: 3,
-    message: 'Tenho alguns estudos em comum sobre sistemas de design e comunidade.',
-    requestedAtLabel: 'Semana passada'
-  })
-];
+function mapSocialUser(user: SocialUser): FriendListItem {
+  return mapFriendFromApi({
+    id: user.id,
+    displayName: user.displayName,
+    username: user.username,
+    avatarUrl: user.avatarUrl,
+    status: mapPresenceToStatus(user.presence),
+    bio: user.bio,
+    lastActiveLabel: user.presence === 'online' ? 'Disponível agora' : null
+  });
+}
 
 export function SocialDemoPage() {
   const [activeTab, setActiveTab] = useState<SocialTab>('all');
+  const [selectedFriend, setSelectedFriend] = useState<FriendListItem | null>(null);
+  const currentUserId = useAuthStore((state) => state.user?.id);
+  const queryClient = useQueryClient();
+  const friendsQuery = useQuery({
+    queryKey: ['friends'],
+    queryFn: () => getFriends()
+  });
+  const requestsQuery = useQuery({
+    queryKey: ['friend-requests'],
+    queryFn: getFriendRequests
+  });
+  const requestMutation = useMutation({
+    mutationFn: async ({
+      requestId,
+      action
+    }: {
+      requestId: string;
+      action: 'accept' | 'decline';
+    }) => {
+      if (action === 'accept') await acceptFriendRequest(requestId);
+      else await declineFriendRequest(requestId);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['friends'] }),
+        queryClient.invalidateQueries({ queryKey: ['friend-requests'] })
+      ]);
+    }
+  });
+
+  const friends = useMemo(
+    () => friendsQuery.data?.items.map(({ user }) => mapSocialUser(user)) ?? [],
+    [friendsQuery.data]
+  );
   const activeFriends = useMemo(
-    () => demoFriends.filter((friend) => friend.status === 'online' || friend.status === 'busy'),
-    []
+    () => friends.filter((friend) => friend.status === 'online' || friend.status === 'busy'),
+    [friends]
+  );
+  const receivedRequests = useMemo(
+    () =>
+      requestsQuery.data?.items.map(({ request, requester }) =>
+        mapFriendRequestFromApi({
+          id: request.id,
+          displayName: requester.displayName,
+          username: requester.username,
+          avatarUrl: requester.avatarUrl,
+          requestedAtLabel: new Date(request.createdAt).toLocaleDateString('pt-BR')
+        })
+      ) ?? [],
+    [requestsQuery.data]
   );
 
   return (
@@ -100,14 +110,28 @@ export function SocialDemoPage() {
             ].join(' ')}
             aria-hidden={activeTab !== 'all' && activeTab !== 'active'}
           >
-            <FriendList
-              title="Amigos"
-              items={activeTab === 'active' ? activeFriends : demoFriends}
-              showOnlyActive={activeTab === 'active'}
-              className="rounded-none border-0 p-0"
-              onProfileClick={(friend) => console.log('Ver perfil:', friend.displayName)}
-              onMessageClick={(friend) => console.log('Mensagem para:', friend.displayName)}
-            />
+            <div className="flex flex-col gap-4 lg:flex-row">
+              <FriendList
+                title="Amigos"
+                items={activeTab === 'active' ? activeFriends : friends}
+                showOnlyActive={activeTab === 'active'}
+                className="rounded-none border-0 p-0 lg:min-w-0 lg:flex-1"
+                isLoading={friendsQuery.isLoading}
+                error={friendsQuery.isError ? getErrorMessage(friendsQuery.error) : null}
+                onRetry={() => void friendsQuery.refetch()}
+                onProfileClick={(friend) => console.log('Ver perfil:', friend.displayName)}
+                onMessageClick={setSelectedFriend}
+              />
+              {selectedFriend ? (
+                <div className="lg:w-[min(480px,42%)]">
+                  <ConversationPanel
+                    friend={selectedFriend}
+                    currentUserId={currentUserId}
+                    onClose={() => setSelectedFriend(null)}
+                  />
+                </div>
+              ) : null}
+            </div>
           </div>
 
           <div
@@ -122,10 +146,17 @@ export function SocialDemoPage() {
             <FriendRequests
               title="Solicitações"
               receivedItems={receivedRequests}
-              sentItems={sentRequests}
+              sentItems={[]}
+              isLoading={requestsQuery.isLoading}
+              error={requestsQuery.isError ? getErrorMessage(requestsQuery.error) : null}
+              onRetry={() => void requestsQuery.refetch()}
               className="rounded-none border-0 p-0"
-              onAccept={(friend) => console.log('Aceitar:', friend.displayName)}
-              onDecline={(friend) => console.log('Recusar:', friend.displayName)}
+              onAccept={(friend) =>
+                requestMutation.mutate({ requestId: friend.id, action: 'accept' })
+              }
+              onDecline={(friend) =>
+                requestMutation.mutate({ requestId: friend.id, action: 'decline' })
+              }
               onViewProfile={(friend) => console.log('Perfil:', friend.displayName)}
             />
           </div>
