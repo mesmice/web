@@ -1,9 +1,6 @@
 import { useState } from 'react';
-import {
-  BlockedList,
-  mapBlockedListItemFromApi,
-  type BlockedListItem
-} from './components/blocked-list.js';
+import { BlockedList, type BlockedListItem } from './components/blocked-list.js';
+import { mapBlockedListItemFromApi } from './components/blocked-list-mapper.js';
 
 const demoPeople: BlockedListItem[] = [
   mapBlockedListItemFromApi({

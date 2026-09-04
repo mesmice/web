@@ -9,8 +9,10 @@ import {
   type SocialUser
 } from '../../lib/api/endpoints.js';
 import type { ApiRequestError } from '../../lib/api/client.js';
-import { FriendList, type FriendListItem, mapFriendFromApi } from './components/friend-list.js';
-import { FriendRequests, mapFriendRequestFromApi } from './components/friend-requests.js';
+import { FriendList, type FriendListItem } from './components/friend-list.js';
+import { mapFriendFromApi } from './components/friend-list-mapper.js';
+import { FriendRequests } from './components/friend-requests.js';
+import { mapFriendRequestFromApi } from './components/friend-request-mapper.js';
 import { SocialNavigation, type SocialTab } from './components/social-navigation.js';
 import { ConversationPanel } from '../messages/components/conversation-panel.js';
 

@@ -30,20 +30,6 @@ interface FriendListProps {
   onMessageClick?: (friend: FriendListItem) => void;
 }
 
-interface FriendApiShape {
-  id?: string | number | null;
-  displayName?: string | null;
-  name?: string | null;
-  username?: string | null;
-  avatarUrl?: string | null;
-  status?: FriendStatus | string | null;
-  bio?: string | null;
-  mutualFriends?: number | null;
-  isFollowing?: boolean | null;
-  lastActiveLabel?: string | null;
-  accentColor?: string | null;
-}
-
 const STATUS_META: Record<FriendStatus, { label: string; badgeClassName: string }> = {
   online: {
     label: 'Online',
@@ -99,23 +85,6 @@ function getAvatarClasses(color?: string | null) {
 
   const index = Math.abs(Math.round((color?.length ?? 0) % FALLBACK_COLORS.length));
   return `bg-gradient-to-br ${FALLBACK_COLORS[index]}`;
-}
-
-export function mapFriendFromApi(rawFriend: FriendApiShape): FriendListItem {
-  const displayName = rawFriend.displayName ?? rawFriend.name ?? 'Amigo';
-
-  return {
-    id: String(rawFriend.id ?? displayName),
-    displayName,
-    username: rawFriend.username ?? null,
-    avatarUrl: rawFriend.avatarUrl ?? null,
-    status: safeStatus(rawFriend.status),
-    bio: rawFriend.bio ?? null,
-    mutualFriends: rawFriend.mutualFriends ?? null,
-    isFollowing: rawFriend.isFollowing ?? false,
-    lastActiveLabel: rawFriend.lastActiveLabel ?? null,
-    accentColor: rawFriend.accentColor ?? null
-  };
 }
 
 function FriendAvatar({ friend }: { friend: FriendListItem }) {
