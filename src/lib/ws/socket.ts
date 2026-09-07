@@ -1,5 +1,5 @@
 import {
-  GATEWAY_PATH,
+  GATEWAY_PATH, HEARTBEAT_INTERVAL_MS,
   WS_CLOSE_CODES,
   type ClientMessage,
   type ServerMessage
@@ -8,13 +8,21 @@ import {
 type Listener<T> = (data: T) => void
 type AccessTokenProvider = () => string | null
 
-const WS_URL = import.meta.env.VITE_WS_URL ?? `ws://${window.location.host}${GATEWAY_PATH}`
 const MAX_BACKOFF_MS = 15_000
+
+export type GatewayStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'unavailable' | 'revoked'
+
+export function buildWebSocketUrl(explicitUrl?: string, locationLike?: Pick<Location, 'protocol' | 'host'>): string {
+  if (explicitUrl) return explicitUrl
+  if (!locationLike) return `ws://localhost${GATEWAY_PATH}`
+  const protocol = locationLike.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${protocol}//${locationLike.host}${GATEWAY_PATH}`
+}
 
 export class GatewaySocket {
   private socket: WebSocket | null = null
   private listeners = new Set<Listener<ServerMessage>>()
-  private statusListeners = new Set<Listener<'connecting' | 'open' | 'closed'>>()
+  private statusListeners = new Set<Listener<GatewayStatus>>()
   private sessionRevokedListeners = new Set<Listener<void>>()
   private unauthorizedListeners = new Set<Listener<void>>()
   private reconnectAttempts = 0
@@ -22,20 +30,22 @@ export class GatewaySocket {
   private getAccessToken: AccessTokenProvider | null = null
   /** Bloqueia apenas a RECONEXÃO automática; connect() explícito sempre funciona. */
   private autoReconnectBlocked = false
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null
 
   connect(getAccessToken: AccessTokenProvider): void {
     this.getAccessToken = getAccessToken
     // Conexão explícita reabilita a reconexão automática (ex.: relogin
     // depois de um logout que havia bloqueado o backoff).
     this.autoReconnectBlocked = false
+    this.clearReconnectTimer()
     this.openSocket()
   }
 
   private openSocket(): void {
     if (this.socket || !this.getAccessToken?.()) return
-    this.emitStatus('connecting')
+    this.emitStatus(this.reconnectAttempts > 0 ? 'reconnecting' : 'connecting')
 
-    const socket = new WebSocket(WS_URL)
+    const socket = new WebSocket(buildWebSocketUrl(import.meta.env.VITE_WS_URL, typeof window !== 'undefined' ? window.location : undefined))
     this.socket = socket
 
     let revocationHandled = false
@@ -49,15 +59,18 @@ export class GatewaySocket {
 
       this.reconnectAttempts = 0
       socket.send(JSON.stringify({ type: 'identify', token: accessToken } satisfies ClientMessage))
-      this.emitStatus('open')
+      this.startHeartbeat(socket)
+      this.emitStatus('connected')
     })
 
     socket.addEventListener('message', (event) => {
       try {
-        const data = JSON.parse(event.data) as ServerMessage
+        const data: unknown = JSON.parse(event.data)
+        if (!isServerMessage(data)) return
         if (data.type === 'session.revoked') {
           revocationHandled = true
           this.autoReconnectBlocked = true
+          this.emitStatus('revoked')
           for (const listener of this.sessionRevokedListeners) listener()
         }
         for (const listener of this.listeners) listener(data)
@@ -69,7 +82,8 @@ export class GatewaySocket {
     socket.addEventListener('close', (event) => {
       if (this.socket !== socket) return
       this.socket = null
-      this.emitStatus('closed')
+      this.stopHeartbeat()
+      this.emitStatus(this.autoReconnectBlocked ? 'disconnected' : 'unavailable')
 
       // Sessão revogada pelo servidor: sem reautenticação não há o que
       // reconectar — bloqueia backoff e notifica os ouvintes.
@@ -110,7 +124,7 @@ export class GatewaySocket {
     const socket = this.socket
     this.socket = null
     socket?.close()
-    this.emitStatus('closed')
+    this.emitStatus('disconnected')
   }
 
   send(message: ClientMessage): boolean {
@@ -128,7 +142,7 @@ export class GatewaySocket {
     return () => this.listeners.delete(listener)
   }
 
-  onStatusChange(listener: Listener<'connecting' | 'open' | 'closed'>): () => void {
+  onStatusChange(listener: Listener<GatewayStatus>): () => void {
     this.statusListeners.add(listener)
     return () => this.statusListeners.delete(listener)
   }
@@ -145,7 +159,7 @@ export class GatewaySocket {
     return () => this.unauthorizedListeners.delete(listener)
   }
 
-  private emitStatus(status: 'connecting' | 'open' | 'closed'): void {
+  private emitStatus(status: GatewayStatus): void {
     for (const listener of this.statusListeners) listener(status)
   }
 
@@ -159,6 +173,29 @@ export class GatewaySocket {
       this.openSocket()
     }, jittered)
   }
+
+  private startHeartbeat(socket: WebSocket): void {
+    this.stopHeartbeat()
+    this.heartbeatTimer = setInterval(() => {
+      if (this.socket === socket) this.ping()
+    }, HEARTBEAT_INTERVAL_MS)
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatTimer) clearInterval(this.heartbeatTimer)
+    this.heartbeatTimer = null
+  }
+
+  private clearReconnectTimer(): void {
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer)
+    this.reconnectTimer = null
+  }
+}
+
+function isServerMessage(value: unknown): value is ServerMessage {
+  if (!value || typeof value !== 'object' || !('type' in value)) return false
+  const type = (value as { type?: unknown }).type
+  return typeof type === 'string' && ['pong', 'ready', 'message.created', 'presence.update', 'friend.request', 'friend.accept', 'friend.remove', 'user.update', 'session.revoked'].includes(type)
 }
 
 export const gateway = new GatewaySocket()

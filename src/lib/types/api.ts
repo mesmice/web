@@ -77,6 +77,18 @@ export type ServerMessage =
         authorId: string;
         content: string;
         createdAt: string;
+        mentions: string[];
+        mentionsEveryone: boolean;
+        attachments: Array<{
+          id: string;
+          objectKey: string;
+          fileName: string;
+          contentType: string;
+          size: number;
+          width: number | null;
+          height: number | null;
+        }>;
+        notify: boolean;
       };
     }
   | {
@@ -117,6 +129,7 @@ export type ServerMessage =
 export type ClientMessage = { type: 'ping'; sentAt?: number } | { type: 'identify'; token: string };
 
 export const GATEWAY_PATH = '/gateway';
+export const HEARTBEAT_INTERVAL_MS = 30_000;
 
 /**
  * Códigos de fechamento do gateway, espelhando `WS_CLOSE_CODES`
