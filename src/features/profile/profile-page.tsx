@@ -31,6 +31,7 @@ interface ProfileExperienceProps {
   profile: PrivateUser;
   isOwner?: boolean;
   onSaveBio?: (bio: string | null) => Promise<void>;
+  onSaveLinks?: (links: PrivateUser['externalLinks']) => Promise<void>;
   friendsCount?: number | null;
   tagline?: string | null;
   highlight?: ProfileHighlightData | null;
@@ -40,9 +41,10 @@ export function ProfileExperience({
   profile,
   isOwner = false,
   onSaveBio,
-  friendsCount = null,
-  tagline = null,
-  highlight = null
+  onSaveLinks,
+  friendsCount = PROFILE_DEMO_FRIENDS_COUNT,
+  tagline = PROFILE_DEMO_TAGLINE,
+  highlight = PROFILE_DEMO_HIGHLIGHT
 }: ProfileExperienceProps) {
   const defaultProfileTheme = {
     ...DEFAULT_PROFILE_THEME,
@@ -104,7 +106,7 @@ export function ProfileExperience({
                 />
               </div>
             </div>
-            <ProfileLinks links={profile.externalLinks} />
+            <ProfileLinks links={profile.externalLinks} isOwner={isOwner} onSave={onSaveLinks} />
             <ProfileHighlight highlight={highlight} />
           </div>
         </div>
@@ -127,7 +129,7 @@ export function ProfileExperience({
 
 function AuthenticatedProfilePage() {
   const profileQuery = useMyProfile();
-  const updateProfileMutation = useUpdateProfile();
+  const updateProfile = useUpdateProfile();
 
   if (profileQuery.isPending) return <ProfileLoading />;
   if (profileQuery.isError) {
@@ -144,7 +146,10 @@ function AuthenticatedProfilePage() {
       profile={profileQuery.data}
       isOwner
       onSaveBio={async (bio) => {
-        await updateProfileMutation.mutateAsync({ bio });
+        await updateProfile.mutateAsync({ bio });
+      }}
+      onSaveLinks={async (externalLinks) => {
+        await updateProfile.mutateAsync({ externalLinks });
       }}
     />
   );

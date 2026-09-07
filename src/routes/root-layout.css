@@ -52,6 +52,10 @@
   padding: var(--space-6);
 }
 
+.layout--landing .layout__main {
+  padding: 0;
+}
+
 .layout--auth {
   background: #cabeff;
 }

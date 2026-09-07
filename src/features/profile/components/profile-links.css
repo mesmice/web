@@ -1,0 +1,22 @@
+.profile-connections__heading,
+.profile-links__field-heading,
+.profile-links__item-actions,
+.profile-links__editor-actions { display: flex; align-items: center; }
+.profile-connections__heading { justify-content: space-between; }
+.profile-connections__heading h2 { margin-bottom: 12px; }
+.profile-links__icon-button { display: grid; width: 36px; height: 36px; padding: 0; place-items: center; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--color-text-secondary); cursor: pointer; }
+.profile-links__icon-button:hover:not(:disabled), .profile-links__icon-button:focus-visible { background: var(--profile-secondary-glass); color: var(--profile-foreground); }
+.profile-links__icon-button:focus-visible { outline: 2px solid var(--color-border-focus); outline-offset: 2px; }
+.profile-links__icon-button:disabled { opacity: .35; cursor: not-allowed; }
+.profile-links__editor, .profile-links__fields { display: grid; gap: var(--space-4); }
+.profile-links__fields { margin: 0; padding: 0; list-style: none; }
+.profile-links__field-group { padding: var(--space-3); border: 1px solid color-mix(in srgb, var(--profile-foreground) 14%, transparent); border-radius: var(--radius-md); background: color-mix(in srgb, var(--profile-secondary-glass) 55%, transparent); }
+.profile-links__field-heading { justify-content: space-between; font-size: var(--font-size-sm); font-weight: 700; }
+.profile-links__field-group label { display: block; margin-top: var(--space-3); color: var(--color-text-secondary); font-size: .75rem; font-weight: 600; }
+.profile-links__field-error, .profile-links__save-error { display: block; margin-top: var(--space-1); color: var(--color-danger); font-size: .75rem; }
+.profile-links__limit { font-size: .75rem !important; }
+.profile-links__editor-actions { justify-content: flex-end; gap: var(--space-2); }
+.profile-links__empty { display: grid; justify-items: start; gap: var(--space-3); }
+.profile-connections__unsafe { display: inline-flex; align-items: center; gap: 12px; min-height: 44px; max-width: 100%; padding: 2px; color: var(--color-text-secondary); }
+.profile-links__remove:hover:not(:disabled) { color: var(--color-danger); }
+@media (max-width: 520px) { .profile-links__editor-actions { display: grid; grid-template-columns: 1fr 1fr; } .profile-links__editor-actions .btn { width: 100%; } }
