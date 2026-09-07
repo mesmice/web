@@ -138,6 +138,7 @@ test('rota de perfil permite acesso temporário ao visitante anônimo', async ({
 });
 
 async function mockAuthenticatedProfile(page: Page) {
+  let patchPayload: unknown;
   await page.addInitScript(() => localStorage.setItem('mesmice.refresh', 'saved-refresh'));
   await page.route('**/api/v1/auth/refresh', async (route) => {
     await route.fulfill({
@@ -145,6 +146,9 @@ async function mockAuthenticatedProfile(page: Page) {
     });
   });
   await page.route('**/api/v1/users/me', async (route) => {
+    const externalLinks = route.request().method() === 'PATCH'
+      ? ((patchPayload = route.request().postDataJSON()) as { externalLinks: Array<{ label: string; url: string }> }).externalLinks
+      : [{ label: 'Site pessoal', url: 'https://example.com' }];
     await route.fulfill({
       json: {
         user: {
@@ -155,7 +159,7 @@ async function mockAuthenticatedProfile(page: Page) {
           avatarUrl: '/images/auth/mascote-neutro-lightmode.png',
           avatarThumbUrl: null,
           bannerUrl: '/images/landing-page/what-is/community-card.png',
-          externalLinks: [{ label: 'Site pessoal', url: 'https://example.com' }],
+          externalLinks,
           profileTheme: null,
           avatarFrameUrl: null,
           profileColor: '#8b5cf6',
@@ -169,7 +173,22 @@ async function mockAuthenticatedProfile(page: Page) {
       }
     });
   });
+  return { getPatchPayload: () => patchPayload };
 }
+
+test('owner edita links e a resposta canônica atualiza a visualização', async ({ page }) => {
+  const request = await mockAuthenticatedProfile(page);
+  await page.goto('/profile');
+  await page.getByRole('button', { name: 'Editar links' }).click();
+  await page.getByLabel('Nome').fill('Portfólio');
+  await page.getByLabel('URL').fill('https://portfolio.example.com');
+  await page.getByRole('button', { name: 'Salvar links' }).click();
+
+  await expect(page.getByRole('link', { name: /Portfólio/ })).toBeVisible();
+  expect(request.getPatchPayload()).toEqual({
+    externalLinks: [{ label: 'Portfólio', url: 'https://portfolio.example.com' }]
+  });
+});
 
 test('usuário autenticado acessa o perfil sem overflow no mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });

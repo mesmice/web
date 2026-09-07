@@ -17,6 +17,7 @@ import {
   PROFILE_DEMO
 } from './profile-demo-data.js';
 import { useMyProfile } from './queries/use-my-profile.js';
+import { useUpdateProfile } from './queries/use-update-profile.js';
 import './profile-page.css';
 import {
   DEFAULT_NICK_THEME,
@@ -28,6 +29,8 @@ import {
 
 interface ProfileExperienceProps {
   profile: PrivateUser;
+  isOwner?: boolean;
+  onSaveLinks?: (links: PrivateUser['externalLinks']) => Promise<void>;
   friendsCount?: number | null;
   tagline?: string | null;
   highlight?: ProfileHighlightData | null;
@@ -35,6 +38,8 @@ interface ProfileExperienceProps {
 
 export function ProfileExperience({
   profile,
+  isOwner = false,
+  onSaveLinks,
   friendsCount = PROFILE_DEMO_FRIENDS_COUNT,
   tagline = PROFILE_DEMO_TAGLINE,
   highlight = PROFILE_DEMO_HIGHLIGHT
@@ -95,7 +100,7 @@ export function ProfileExperience({
                 />
               </div>
             </div>
-            <ProfileLinks links={profile.externalLinks} />
+            <ProfileLinks links={profile.externalLinks} isOwner={isOwner} onSave={onSaveLinks} />
             <ProfileHighlight highlight={highlight} />
           </div>
         </div>
@@ -118,6 +123,7 @@ export function ProfileExperience({
 
 function AuthenticatedProfilePage() {
   const profileQuery = useMyProfile();
+  const updateProfile = useUpdateProfile();
 
   if (profileQuery.isPending) return <ProfileLoading />;
   if (profileQuery.isError) {
@@ -129,7 +135,9 @@ function AuthenticatedProfilePage() {
     );
   }
 
-  return <ProfileExperience profile={profileQuery.data} />;
+  return <ProfileExperience profile={profileQuery.data} isOwner onSaveLinks={async (externalLinks) => {
+    await updateProfile.mutateAsync({ externalLinks });
+  }} />;
 }
 
 export function ProfilePage() {
