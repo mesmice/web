@@ -5,10 +5,10 @@ import type { PrivateUser } from '../../../lib/types/auth.js';
 interface ProfileAboutProps {
   bio: PrivateUser['bio'];
   isOwner: boolean;
-  onSave?: (bio: string) => Promise<void> | void;
+  onSave?: (bio: string | null) => Promise<void> | void;
 }
 
-const BIO_LIMIT = 300;
+const BIO_LIMIT = 190;
 const URL_REGEX = /(https?:\/\/[^\s]+)/g;
 const MENTION_REGEX = /(@[a-zA-Z0-9_.]+)/g;
 
@@ -132,7 +132,7 @@ export function ProfileAbout({ bio, isOwner, onSave }: ProfileAboutProps) {
     setFeedback(null);
 
     try {
-      await onSave(nextBio);
+      await onSave(nextBio || null);
       setIsEditing(false);
       setFeedback('Bio salva com sucesso.');
     } catch {
@@ -183,7 +183,7 @@ export function ProfileAbout({ bio, isOwner, onSave }: ProfileAboutProps) {
                 type="button"
                 onClick={() => void handleSave()}
                 className="h-8 px-3 text-xs bg-(--color-brand-primary) text-(--color-brand-white) hover:bg-(--color-brand-primary-hover)"
-                disabled={isSaving || draft.trim().length === 0}
+                disabled={isSaving}
                 aria-label="Salvar bio"
               >
                 {isSaving ? 'Salvando...' : 'Salvar bio'}

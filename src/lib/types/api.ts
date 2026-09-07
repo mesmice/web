@@ -6,7 +6,18 @@ export type ErrorCode =
   | 'FORBIDDEN'
   | 'NOT_FOUND'
   | 'CONFLICT'
+  | 'EMAIL_TAKEN'
+  | 'USERNAME_TAKEN'
+  | 'INVALID_CREDENTIALS'
+  | 'ACCOUNT_LOCKED'
+  | 'EMAIL_NOT_VERIFIED'
+  | 'TOKEN_INVALID'
+  | 'SESSION_EXPIRED'
+  | 'SESSION_REVOKED'
+  | 'PAYLOAD_TOO_LARGE'
+  | 'UNSUPPORTED_MEDIA_TYPE'
   | 'RATE_LIMITED'
+  | 'MAINTENANCE'
   | 'INTERNAL';
 
 export interface ErrorEnvelope {
@@ -62,7 +73,7 @@ export interface PasswordResetPayload {
 }
 
 export interface PasswordResetRequestResponse {
-  message: string;
+  sent: true;
 }
 
 export type ServerMessage =

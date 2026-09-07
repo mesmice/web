@@ -107,7 +107,7 @@ export function requestPasswordReset(
 
 export function resetPassword(
   payload: PasswordResetPayload
-): Promise<PasswordResetRequestResponse> {
+): Promise<void> {
   return apiFetch('/auth/reset-password', { method: 'POST', body: payload });
 }
 

@@ -17,6 +17,7 @@ import {
   PROFILE_DEMO
 } from './profile-demo-data.js';
 import { useMyProfile } from './queries/use-my-profile.js';
+import { useUpdateProfile } from './queries/use-update-profile.js';
 import './profile-page.css';
 import {
   DEFAULT_NICK_THEME,
@@ -28,6 +29,8 @@ import {
 
 interface ProfileExperienceProps {
   profile: PrivateUser;
+  isOwner?: boolean;
+  onSaveBio?: (bio: string | null) => Promise<void>;
   friendsCount?: number | null;
   tagline?: string | null;
   highlight?: ProfileHighlightData | null;
@@ -35,9 +38,11 @@ interface ProfileExperienceProps {
 
 export function ProfileExperience({
   profile,
-  friendsCount = PROFILE_DEMO_FRIENDS_COUNT,
-  tagline = PROFILE_DEMO_TAGLINE,
-  highlight = PROFILE_DEMO_HIGHLIGHT
+  isOwner = false,
+  onSaveBio,
+  friendsCount = null,
+  tagline = null,
+  highlight = null
 }: ProfileExperienceProps) {
   const defaultProfileTheme = {
     ...DEFAULT_PROFILE_THEME,
@@ -87,7 +92,11 @@ export function ProfileExperience({
               <ProfileIdentity displayName={profile.displayName} username={profile.username} />
               {tagline ? <p className="profile-shell__tagline">“{tagline}”</p> : null}
               <div className="profile-page__about profile-mobile-card">
-                <ProfileAbout bio={profile.bio} isOwner />
+                <ProfileAbout
+                  bio={profile.bio}
+                  isOwner={isOwner}
+                  onSave={isOwner ? onSaveBio : undefined}
+                />
                 <ProfileMeta
                   createdAt={profile.createdAt}
                   badges={profile.badges}
@@ -118,6 +127,7 @@ export function ProfileExperience({
 
 function AuthenticatedProfilePage() {
   const profileQuery = useMyProfile();
+  const updateProfileMutation = useUpdateProfile();
 
   if (profileQuery.isPending) return <ProfileLoading />;
   if (profileQuery.isError) {
@@ -129,7 +139,15 @@ function AuthenticatedProfilePage() {
     );
   }
 
-  return <ProfileExperience profile={profileQuery.data} />;
+  return (
+    <ProfileExperience
+      profile={profileQuery.data}
+      isOwner
+      onSaveBio={async (bio) => {
+        await updateProfileMutation.mutateAsync({ bio });
+      }}
+    />
+  );
 }
 
 export function ProfilePage() {
@@ -138,6 +156,11 @@ export function ProfilePage() {
   return isAuthenticated ? (
     <AuthenticatedProfilePage />
   ) : (
-    <ProfileExperience profile={PROFILE_DEMO} />
+    <ProfileExperience
+      profile={PROFILE_DEMO}
+      friendsCount={PROFILE_DEMO_FRIENDS_COUNT}
+      tagline={PROFILE_DEMO_TAGLINE}
+      highlight={PROFILE_DEMO_HIGHLIGHT}
+    />
   );
 }
