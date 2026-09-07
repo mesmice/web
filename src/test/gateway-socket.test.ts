@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { WS_CLOSE_CODES } from '../lib/types/api.js'
-import { GatewaySocket } from '../lib/ws/socket.js'
+import { buildWebSocketUrl, GatewaySocket } from '../lib/ws/socket.js'
 
 interface SocketEvent {
   code?: number
@@ -71,6 +71,15 @@ afterEach(() => {
 })
 
 describe('GatewaySocket', () => {
+  it('constrói ws para páginas HTTP e wss para páginas HTTPS', () => {
+    expect(buildWebSocketUrl(undefined, { protocol: 'http:', host: 'localhost:5173' })).toBe('ws://localhost:5173/gateway')
+    expect(buildWebSocketUrl(undefined, { protocol: 'https:', host: 'mesmice.example' })).toBe('wss://mesmice.example/gateway')
+  })
+
+  it('prioriza a URL explicitamente configurada', () => {
+    expect(buildWebSocketUrl('wss://socket.example/custom', { protocol: 'http:', host: 'localhost' })).toBe('wss://socket.example/custom')
+  })
+
   it('envia identify com o access token atual assim que a conexão abre', () => {
     gateway.connect(() => 'access-atual')
     FakeWebSocket.instances[0].serverOpen()
@@ -78,6 +87,20 @@ describe('GatewaySocket', () => {
     expect(FakeWebSocket.instances[0].sent).toEqual([
       JSON.stringify({ type: 'identify', token: 'access-atual' })
     ])
+  })
+
+  it('envia heartbeat somente após abrir e limpa o timer ao desconectar', () => {
+    gateway.connect(() => 'access')
+    const socket = FakeWebSocket.instances[0]
+    vi.advanceTimersByTime(30_000)
+    expect(socket.sent).toHaveLength(0)
+    socket.serverOpen()
+    vi.advanceTimersByTime(30_000)
+    expect(JSON.parse(socket.sent[1]!)).toMatchObject({ type: 'ping' })
+    gateway.disconnect()
+    const sent = socket.sent.length
+    vi.advanceTimersByTime(60_000)
+    expect(socket.sent).toHaveLength(sent)
   })
 
   it('não abre conexão nem inventa token quando não existe sessão em memória', () => {

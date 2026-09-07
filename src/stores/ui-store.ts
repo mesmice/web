@@ -1,13 +1,19 @@
 import { create } from 'zustand'
 
-export type ConnectionStatus = 'connecting' | 'open' | 'closed'
+import type { PresenceStatus } from '../lib/types/api.js'
+
+export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'unavailable' | 'revoked'
 
 interface UiState {
   gatewayStatus: ConnectionStatus
+  presence: Record<string, PresenceStatus>
   setGatewayStatus(status: ConnectionStatus): void
+  setPresence(userId: string, status: PresenceStatus): void
 }
 
 export const useUiStore = create<UiState>((set) => ({
-  gatewayStatus: 'closed',
-  setGatewayStatus: (gatewayStatus) => set({ gatewayStatus })
+  gatewayStatus: 'disconnected',
+  presence: {},
+  setGatewayStatus: (gatewayStatus) => set({ gatewayStatus }),
+  setPresence: (userId, status) => set((state) => ({ presence: { ...state.presence, [userId]: status } }))
 }))
