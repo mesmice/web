@@ -35,7 +35,7 @@ export function ProfileLinks({ links, isOwner = false, onSave }: ProfileLinksPro
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  if (!isOwner && links.length === 0) return null;
+  if (links.length === 0 && (!isOwner || !onSave)) return null;
 
   const startEditing = () => {
     setDraft(links.length ? links.map(makeEditable) : [makeEditable()]); setErrors({}); setSaveError(null); setSaveSuccess(false); setIsEditing(true);

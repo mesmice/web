@@ -30,6 +30,7 @@ import {
 interface ProfileExperienceProps {
   profile: PrivateUser;
   isOwner?: boolean;
+  onSaveBio?: (bio: string | null) => Promise<void>;
   onSaveLinks?: (links: PrivateUser['externalLinks']) => Promise<void>;
   friendsCount?: number | null;
   tagline?: string | null;
@@ -39,10 +40,11 @@ interface ProfileExperienceProps {
 export function ProfileExperience({
   profile,
   isOwner = false,
+  onSaveBio,
   onSaveLinks,
-  friendsCount = PROFILE_DEMO_FRIENDS_COUNT,
-  tagline = PROFILE_DEMO_TAGLINE,
-  highlight = PROFILE_DEMO_HIGHLIGHT
+  friendsCount = null,
+  tagline = null,
+  highlight = null
 }: ProfileExperienceProps) {
   const defaultProfileTheme = {
     ...DEFAULT_PROFILE_THEME,
@@ -92,7 +94,11 @@ export function ProfileExperience({
               <ProfileIdentity displayName={profile.displayName} username={profile.username} />
               {tagline ? <p className="profile-shell__tagline">“{tagline}”</p> : null}
               <div className="profile-page__about profile-mobile-card">
-                <ProfileAbout bio={profile.bio} isOwner />
+                <ProfileAbout
+                  bio={profile.bio}
+                  isOwner={isOwner}
+                  onSave={isOwner ? onSaveBio : undefined}
+                />
                 <ProfileMeta
                   createdAt={profile.createdAt}
                   badges={profile.badges}
@@ -135,9 +141,18 @@ function AuthenticatedProfilePage() {
     );
   }
 
-  return <ProfileExperience profile={profileQuery.data} isOwner onSaveLinks={async (externalLinks) => {
-    await updateProfile.mutateAsync({ externalLinks });
-  }} />;
+  return (
+    <ProfileExperience
+      profile={profileQuery.data}
+      isOwner
+      onSaveBio={async (bio) => {
+        await updateProfile.mutateAsync({ bio });
+      }}
+      onSaveLinks={async (externalLinks) => {
+        await updateProfile.mutateAsync({ externalLinks });
+      }}
+    />
+  );
 }
 
 export function ProfilePage() {
@@ -146,6 +161,11 @@ export function ProfilePage() {
   return isAuthenticated ? (
     <AuthenticatedProfilePage />
   ) : (
-    <ProfileExperience profile={PROFILE_DEMO} />
+    <ProfileExperience
+      profile={PROFILE_DEMO}
+      friendsCount={PROFILE_DEMO_FRIENDS_COUNT}
+      tagline={PROFILE_DEMO_TAGLINE}
+      highlight={PROFILE_DEMO_HIGHLIGHT}
+    />
   );
 }

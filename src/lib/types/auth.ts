@@ -19,6 +19,7 @@ export interface ExternalLink {
 export interface ProfileBadge {
   code: string
   name: string
+  category: string
   grantedAt: string
 }
 

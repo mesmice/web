@@ -214,7 +214,7 @@ test('perfil local preserva hierarquia e mídia no desktop', async ({ page }) =>
   await expect(page.locator('.profile-header__banner-image')).toBeVisible();
   await expect(page.getByRole('link', { name: /Site pessoal/ })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Personalizar perfil' })).toBeVisible();
-  await expect(page.getByText('128 amigos')).toBeVisible();
+  await expect(page.getByText('128 amigos')).toHaveCount(0);
   await expect(page.locator('.profile-meta')).toHaveCSS('border-width', '0px');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     await page.evaluate(() => document.documentElement.clientWidth)
@@ -233,7 +233,7 @@ for (const viewport of [
 
     await expect(page.getByRole('heading', { name: 'Maria Souza' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Conexões' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Destaque' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Destaque' })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
       await page.evaluate(() => document.documentElement.clientWidth)
     );

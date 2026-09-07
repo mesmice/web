@@ -9,6 +9,19 @@ describe('apiFetch', () => {
     expect(result).toEqual({ status: 'ok' })
   })
 
+  it('retorna undefined sem tentar fazer parsing de JSON em 204 No Content', async () => {
+    server.use(
+      http.post('*/api/v1/auth/reset-password', () => new HttpResponse(null, { status: 204 }))
+    )
+
+    await expect(
+      apiFetch<void>('/auth/reset-password', {
+        method: 'POST',
+        body: { token: 'valid-token', password: 'senha-com-10' }
+      })
+    ).resolves.toBeUndefined()
+  })
+
   it('lança ApiRequestError com envelope em erros da API', async () => {
     server.use(
       http.get('*/api/v1/health/live', () =>

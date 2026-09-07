@@ -1,7 +1,12 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { PrivateUser } from '../../lib/types/auth.js';
-import { PROFILE_DEMO, PROFILE_DEMO_FRIENDS_COUNT } from './profile-demo-data.js';
+import {
+  PROFILE_DEMO,
+  PROFILE_DEMO_FRIENDS_COUNT,
+  PROFILE_DEMO_HIGHLIGHT,
+  PROFILE_DEMO_TAGLINE
+} from './profile-demo-data.js';
 import { ProfileExperience } from './profile-page.js';
 
 afterEach(() => cleanup());
@@ -10,7 +15,10 @@ function renderProfile(overrides: Partial<PrivateUser> = {}, friendsCount?: numb
   render(
     <ProfileExperience
       profile={{ ...PROFILE_DEMO, ...overrides }}
+      isOwner
       friendsCount={friendsCount === undefined ? PROFILE_DEMO_FRIENDS_COUNT : friendsCount}
+      tagline={PROFILE_DEMO_TAGLINE}
+      highlight={PROFILE_DEMO_HIGHLIGHT}
     />
   );
 }
@@ -52,7 +60,9 @@ describe('ProfilePage', () => {
       avatarUrl: 'https://cdn.example.com/avatar.png',
       bannerUrl: 'https://cdn.example.com/banner.png',
       externalLinks: [{ label: 'Portfólio', url: 'https://example.com' }],
-      badges: [{ code: 'founder', name: 'Fundadora', grantedAt: '2026-01-01T12:00:00.000Z' }]
+      badges: [
+        { code: 'founder', name: 'Fundadora', category: 'community', grantedAt: '2026-01-01T12:00:00.000Z' }
+      ]
     });
 
     expect(screen.getByRole('img', { name: 'Avatar de Maria Souza' })).toBeDefined();
