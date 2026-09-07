@@ -42,9 +42,9 @@ export function ProfileExperience({
   isOwner = false,
   onSaveBio,
   onSaveLinks,
-  friendsCount = PROFILE_DEMO_FRIENDS_COUNT,
-  tagline = PROFILE_DEMO_TAGLINE,
-  highlight = PROFILE_DEMO_HIGHLIGHT
+  friendsCount = null,
+  tagline = null,
+  highlight = null
 }: ProfileExperienceProps) {
   const defaultProfileTheme = {
     ...DEFAULT_PROFILE_THEME,
