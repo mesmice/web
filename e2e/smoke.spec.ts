@@ -146,9 +146,14 @@ async function mockAuthenticatedProfile(page: Page) {
     });
   });
   await page.route('**/api/v1/users/me', async (route) => {
-    const externalLinks = route.request().method() === 'PATCH'
-      ? ((patchPayload = route.request().postDataJSON()) as { externalLinks: Array<{ label: string; url: string }> }).externalLinks
-      : [{ label: 'Site pessoal', url: 'https://example.com' }];
+    const externalLinks =
+      route.request().method() === 'PATCH'
+        ? (
+            (patchPayload = route.request().postDataJSON()) as {
+              externalLinks: Array<{ label: string; url: string }>;
+            }
+          ).externalLinks
+        : [{ label: 'Site pessoal', url: 'https://example.com' }];
     await route.fulfill({
       json: {
         user: {
@@ -346,7 +351,7 @@ test('cadastro permite montar um perfil em etapas', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'O que te interessa?' })).toBeVisible();
   await page.getByRole('button', { name: 'Continuar' }).click();
   await page.getByRole('button', { name: 'Criar meu perfil' }).click();
-  await expect(page.getByRole('heading', { name: 'Seu perfil está pronto!' })).toBeVisible();
+  await expect(page).toHaveURL(/\/app$/);
   expect(registerPayload).toEqual({
     email: 'pessoa@exemplo.com',
     username: 'pessoa_mesmice',

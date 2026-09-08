@@ -6,6 +6,7 @@ import { ForgotPasswordPage, ResetPasswordPage } from '../features/auth/password
 import { RegisterPage } from '../features/auth/register-page.js';
 import { RequireAuth } from '../features/auth/require-auth.js';
 import { ProfilePage } from '../features/profile/profile-page.js';
+import { SpacesPage } from '../features/spaces/pages/spaces-page.js';
 
 export function createProfileRoute(isDevelopment: boolean): RouteObject {
   if (isDevelopment) {
@@ -28,6 +29,10 @@ export const router = createBrowserRouter([
       { path: 'forgot-password', element: <ForgotPasswordPage /> },
       { path: 'reset-password', element: <ResetPasswordPage /> },
       { path: 'register', element: <RegisterPage /> },
+      {
+        element: <RequireAuth />,
+        children: [{ path: 'app', element: <SpacesPage /> }]
+      },
       createProfileRoute(import.meta.env.DEV)
     ]
   }

@@ -41,7 +41,7 @@ export function LoginPage() {
     mutationFn: login,
     onSuccess: ({ accessToken, refreshToken, user }) => {
       applyAuthenticatedSession({ accessToken, refreshToken }, user);
-      navigate('/');
+      navigate('/app');
     }
   });
 

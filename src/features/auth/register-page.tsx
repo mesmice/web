@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent, PointerEvent } from 'react';
 import { Check, ImagePlus, Mail, Smartphone, Upload, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { register } from '../../lib/api/endpoints.js';
 import { ApiRequestError } from '../../lib/api/client.js';
@@ -672,9 +672,10 @@ function ReviewStep({
 }
 
 export function RegisterPage() {
+  const navigate = useNavigate();
+  const submitted = false;
   const [step, setStep] = useState(0);
   const [stepDirection, setStepDirection] = useState<'forward' | 'backward'>('forward');
-  const [submitted, setSubmitted] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const [avatarPosition, setAvatarPosition] = useState({ x: 50, y: 50 });
   const [data, setData] = useState<RegistrationData>({
@@ -771,7 +772,7 @@ export function RegisterPage() {
         { accessToken: result.accessToken, refreshToken: result.refreshToken },
         result.user
       );
-      setSubmitted(true);
+      navigate('/app');
     }
   });
 
