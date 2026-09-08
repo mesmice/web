@@ -135,7 +135,17 @@ export type ServerMessage =
       payload: { userId: string; user: UserSummary };
     }
   | { type: 'user.update'; payload: { user: PublicUser } }
-  | { type: 'session.revoked'; payload: { sessionId: string } };
+  | { type: 'session.revoked'; payload: { sessionId: string } }
+  | {
+      type: 'channel.created';
+      payload: {
+        spaceId: string;
+        channelId: string;
+        channelType: 'TEXT' | 'CATEGORY' | 'VOICE';
+        name: string | null;
+      };
+    }
+  | { type: 'channel.deleted'; payload: { spaceId: string; channelId: string } };
 
 export type ClientMessage = { type: 'ping'; sentAt?: number } | { type: 'identify'; token: string };
 

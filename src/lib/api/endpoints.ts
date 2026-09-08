@@ -50,6 +50,38 @@ export interface DirectMessageChannel {
   unreadCount?: number;
 }
 
+export interface SpaceResponse {
+  id: string;
+  ownerId: string;
+  name: string;
+  description: string | null;
+  visibility: 'PUBLIC' | 'PRIVATE';
+  template: 'COMMUNITY' | 'FAMILY' | 'TEAM' | 'STUDY' | 'GAMING' | 'EVENT';
+  memberCount: number;
+  createdAt: string;
+}
+
+export interface TextChannelResponse {
+  id: string;
+  ownerId: string;
+  type: 'TEXT';
+  spaceId: string;
+  name: string;
+  description: string | null;
+  isPrivate: boolean;
+  allowedRoleIds: string[];
+  allowedUserIds: string[];
+  lastMessageAt: string | null;
+  createdAt: string;
+}
+
+export interface SpaceListResponse {
+  items: SpaceResponse[];
+}
+export interface SpaceChannelListResponse {
+  items: TextChannelResponse[];
+}
+
 export interface ConversationListResponse {
   items: DirectMessageChannel[];
 }
@@ -105,14 +137,27 @@ export function requestPasswordReset(
   return apiFetch('/auth/forgot-password', { method: 'POST', body: payload });
 }
 
-export function resetPassword(
-  payload: PasswordResetPayload
-): Promise<void> {
+export function resetPassword(payload: PasswordResetPayload): Promise<void> {
   return apiFetch('/auth/reset-password', { method: 'POST', body: payload });
 }
 
 export function getMe(): Promise<{ user: PrivateUser }> {
   return apiFetch('/users/me');
+}
+
+export function getSpaces(): Promise<SpaceListResponse> {
+  return apiFetch('/spaces');
+}
+
+export function getSpaceChannels(spaceId: string): Promise<SpaceChannelListResponse> {
+  return apiFetch(`/spaces/${spaceId}/channels`);
+}
+
+export function createTextChannel(
+  spaceId: string,
+  name: string
+): Promise<{ channel: TextChannelResponse }> {
+  return apiFetch('/channels', { method: 'POST', body: { type: 'TEXT', spaceId, name } });
 }
 
 export function logout(): Promise<void> {
