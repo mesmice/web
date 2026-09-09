@@ -18,6 +18,9 @@ import {
 } from './profile-demo-data.js';
 import { useMyProfile } from './queries/use-my-profile.js';
 import { useUpdateProfile } from './queries/use-update-profile.js';
+import { useUploadProfileMedia } from './queries/use-upload-profile-media.js';
+import type { ProfileMediaKind } from './api/profile-media-endpoints.js';
+import type { ProcessedProfileMedia } from './media/image-processing.js';
 import './profile-page.css';
 import {
   DEFAULT_NICK_THEME,
@@ -32,6 +35,7 @@ interface ProfileExperienceProps {
   isOwner?: boolean;
   onSaveBio?: (bio: string | null) => Promise<void>;
   onSaveLinks?: (links: PrivateUser['externalLinks']) => Promise<void>;
+  onUploadMedia?: (kind: ProfileMediaKind, media: ProcessedProfileMedia) => Promise<void>;
   friendsCount?: number | null;
   tagline?: string | null;
   highlight?: ProfileHighlightData | null;
@@ -42,6 +46,7 @@ export function ProfileExperience({
   isOwner = false,
   onSaveBio,
   onSaveLinks,
+  onUploadMedia,
   friendsCount = null,
   tagline = null,
   highlight = null
@@ -85,8 +90,11 @@ export function ProfileExperience({
       >
         <ProfileHeader
           avatarUrl={profile.avatarUrl}
+          avatarThumbUrl={profile.avatarThumbUrl}
           bannerUrl={profile.bannerUrl}
           displayName={profile.displayName}
+          isOwner={isOwner}
+          onUploadMedia={onUploadMedia}
         />
         <div className="profile-shell__content">
           <div className="profile-shell__main-grid">
@@ -130,6 +138,7 @@ export function ProfileExperience({
 function AuthenticatedProfilePage() {
   const profileQuery = useMyProfile();
   const updateProfile = useUpdateProfile();
+  const uploadProfileMedia = useUploadProfileMedia();
 
   if (profileQuery.isPending) return <ProfileLoading />;
   if (profileQuery.isError) {
@@ -147,6 +156,9 @@ function AuthenticatedProfilePage() {
       isOwner
       onSaveBio={async (bio) => {
         await updateProfile.mutateAsync({ bio });
+      }}
+      onUploadMedia={async (kind, media) => {
+        await uploadProfileMedia.mutateAsync({ kind, media });
       }}
       onSaveLinks={async (externalLinks) => {
         await updateProfile.mutateAsync({ externalLinks });

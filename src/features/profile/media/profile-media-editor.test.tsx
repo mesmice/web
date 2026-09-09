@@ -56,20 +56,19 @@ function loadPreview() {
 describe('ProfileMediaEditor', () => {
   it('oferece seleção estática e mantém GIF explicitamente indisponível', () => {
     render(<ProfileMediaEditor aspectRatio={1} onCancel={vi.fn()} onConfirm={vi.fn()} />);
-    expect((screen.getByLabelText('Enviar imagem') as HTMLInputElement).accept).toBe(
+    expect(document.querySelector<HTMLInputElement>('.profile-media-editor__media-option input')).not.toBeNull();
+    expect(document.querySelector<HTMLInputElement>('.profile-media-editor__media-option input')?.accept).toBe(
       'image/png,image/jpeg,image/webp'
     );
-    expect((screen.getByRole('button', { name: 'Enviar GIF' }) as HTMLButtonElement).disabled).toBe(
-      true
-    );
-    expect(screen.getByText(/GIF animado ainda não pode ser editado/)).toBeDefined();
+    expect(screen.getByText('Enviar GIF')).toBeDefined();
+    expect(screen.getByText(/editor não preserva animações/)).toBeDefined();
   });
 
   it('cria preview, permite substituir e revoga cada Object URL', () => {
     const { unmount } = render(
       <ProfileMediaEditor aspectRatio={1} onCancel={vi.fn()} onConfirm={vi.fn()} />
     );
-    const input = screen.getByLabelText('Enviar imagem');
+    const input = document.querySelector<HTMLInputElement>('.profile-media-editor__media-option input')!;
     fireEvent.change(input, {
       target: { files: [new File(['a'], 'a.png', { type: 'image/png' })] }
     });
@@ -85,7 +84,7 @@ describe('ProfileMediaEditor', () => {
 
   it('mostra erros locais de tipo e tamanho', () => {
     render(<ProfileMediaEditor aspectRatio={1} onCancel={vi.fn()} onConfirm={vi.fn()} />);
-    const input = screen.getByLabelText('Enviar imagem');
+    const input = document.querySelector<HTMLInputElement>('.profile-media-editor__media-option input')!;
     fireEvent.change(input, {
       target: { files: [new File(['x'], 'x.gif', { type: 'image/gif' })] }
     });

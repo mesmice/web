@@ -1,8 +1,10 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Film, ImagePlus, RotateCcw } from 'lucide-react';
 import { Button } from '../../../components/ui/button.js';
 import {
   PROFILE_MEDIA_ACCEPT,
+  PROFILE_MEDIA_MAX_BYTES,
   getTransformedDimensions,
   processProfileMedia,
   validateProfileMediaFile,
@@ -12,6 +14,10 @@ import {
   type ProfileMediaMimeType,
   type QuarterTurn
 } from './image-processing.js';
+import {
+  getProfileMediaErrorMessage
+} from '../api/profile-media-endpoints.js';
+import { ApiRequestError } from '../../../lib/api/client.js';
 import './profile-media-editor.css';
 
 interface ProfileMediaEditorLabels {
@@ -38,7 +44,7 @@ export interface ProfileMediaEditorProps {
   viewportShape?: 'rectangle' | 'circle';
   labels?: ProfileMediaEditorLabels;
   onCancel: () => void;
-  onConfirm: (result: ProcessedProfileMedia) => void;
+  onConfirm: (result: ProcessedProfileMedia) => void | Promise<void>;
 }
 
 const DEFAULT_LABELS = {
@@ -284,9 +290,17 @@ export function ProfileMediaEditor({
         mimeType: outputMimeType,
         quality
       });
-      onConfirm(result);
-    } catch {
-      setError('Não foi possível processar a imagem. Tente selecionar outro arquivo.');
+      if (result.blob.size > PROFILE_MEDIA_MAX_BYTES) {
+        throw new Error('A imagem processada excede o limite de 4 MiB.');
+      }
+      await onConfirm(result);
+    } catch (cause) {
+      setError(
+        cause instanceof ApiRequestError ||
+          (cause instanceof Error && cause.message === 'A imagem processada excede o limite de 4 MiB.')
+          ? getProfileMediaErrorMessage(cause)
+          : 'Não foi possível processar a imagem. Tente selecionar outro arquivo.'
+      );
     } finally {
       setProcessing(false);
     }
@@ -325,19 +339,27 @@ export function ProfileMediaEditor({
         ) : (
           <section className="profile-media-editor__selector" aria-label="Selecione uma mídia">
             <h3>Selecione uma mídia</h3>
-            <label className="profile-media-editor__file-control profile-media-editor__file-control--primary">
-              <span>{labels.select}</span>
-              <input
-                type="file"
-                accept={PROFILE_MEDIA_ACCEPT}
-                aria-describedby={error ? errorId : undefined}
-                onChange={(event) => handleFile(event.target.files?.[0] ?? null)}
-              />
-            </label>
-            <Button type="button" variant="secondary" disabled aria-describedby={gifHelpId}>
-              Enviar GIF
-            </Button>
-            <p id={gifHelpId}>GIF animado ainda não pode ser editado sem perder a animação.</p>
+            <div className="profile-media-editor__media-options">
+              <label className="profile-media-editor__media-option profile-media-editor__media-option--primary">
+                <ImagePlus size={20} aria-hidden="true" />
+                <span>{labels.select}</span>
+                <small>PNG, JPEG ou WebP</small>
+                <input
+                  type="file"
+                  accept={PROFILE_MEDIA_ACCEPT}
+                  aria-describedby={error ? errorId : undefined}
+                  onChange={(event) => handleFile(event.target.files?.[0] ?? null)}
+                />
+              </label>
+              <div className="profile-media-editor__media-option profile-media-editor__media-option--disabled">
+                <Film size={20} aria-hidden="true" />
+                <span>Enviar GIF</span>
+                <small id={gifHelpId}>Indisponível: o editor não preserva animações.</small>
+              </div>
+            </div>
+            <p className="profile-media-editor__selector-hint">
+              Escolha uma imagem para ajustar o recorte antes do envio.
+            </p>
           </section>
         )}
 
@@ -425,6 +447,7 @@ export function ProfileMediaEditor({
                   aria-label={labels.rotate}
                   onClick={rotate}
                 >
+                  <RotateCcw size={15} aria-hidden="true" />
                   Girar
                 </Button>
                 <Button
