@@ -131,7 +131,7 @@ describe('ProfileMediaEditor', () => {
     expect(viewport).toBeTruthy();
   });
 
-  it('mostra a imagem completa com máscara e alterna para a prévia final', async () => {
+  it('mantém uma única edição com imagem completa, máscara e duas camadas alinhadas', () => {
     render(
       <ProfileMediaEditor
         file={new File(['a'], 'a.png', { type: 'image/png' })}
@@ -144,15 +144,17 @@ describe('ProfileMediaEditor', () => {
     loadPreview();
     expect(document.querySelector('.profile-media-editor__canvas')).not.toBeNull();
     expect(document.querySelector('.profile-media-editor__crop-window--circle')).not.toBeNull();
-    fireEvent.click(screen.getByRole('tab', { name: 'Pré-visualizar' }));
-    await waitFor(() => expect(screen.getByAltText('Prévia final do avatar')).toBeDefined());
-    expect(screen.queryByAltText('Prévia da imagem selecionada')).toBeNull();
-    fireEvent.click(screen.getByRole('tab', { name: 'Ajustar' }));
+    expect(screen.queryByRole('tab', { name: 'Ajustar' })).toBeNull();
+    expect(screen.queryByRole('tab', { name: 'Pré-visualizar' })).toBeNull();
     expect(screen.getByAltText('Prévia da imagem selecionada')).toBeDefined();
+    expect(document.querySelector('.profile-media-editor__stage--background img')).not.toBeNull();
+    expect(document.querySelector('.profile-media-editor__active-clip')).not.toBeNull();
+    expect(
+      document.querySelector<HTMLElement>('.profile-media-editor__stage--background')?.getAttribute('style')
+    ).toBe(document.querySelector<HTMLElement>('.profile-media-editor__active-clip .profile-media-editor__stage')?.getAttribute('style'));
   });
 
-  it('usa máscara proporcional para banner e permite tentar novamente após falha da prévia', async () => {
-    vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementationOnce((callback) => callback(null));
+  it('usa máscara proporcional para banner e mantém a superfície neutra sem transparência quadriculada', () => {
     render(
       <ProfileMediaEditor
         file={new File(['a'], 'a.png', { type: 'image/png' })}
@@ -164,13 +166,9 @@ describe('ProfileMediaEditor', () => {
     );
     loadPreview();
     expect(document.querySelector('.profile-media-editor__crop-window--rectangle')).not.toBeNull();
-    fireEvent.click(screen.getByRole('tab', { name: 'Pré-visualizar' }));
-    expect((await screen.findByRole('alert')).textContent).toContain('Não foi possível gerar a prévia');
-    vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((callback, type) =>
-      callback(new Blob(['crop'], { type: String(type) }))
-    );
-    fireEvent.click(screen.getByRole('tab', { name: 'Pré-visualizar' }));
-    await waitFor(() => expect(screen.getByAltText('Prévia final do banner')).toBeDefined());
+    expect(document.querySelector('.profile-media-editor__stage--background img')).not.toBeNull();
+    expect(document.querySelector('.profile-media-editor__active-clip img')).not.toBeNull();
+    expect(document.querySelector('.profile-media-editor__canvas')?.className).not.toContain('checker');
   });
 
   it('aplica 90/180/270, flip e redefine todos os ajustes', () => {

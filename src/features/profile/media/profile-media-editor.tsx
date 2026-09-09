@@ -95,8 +95,6 @@ export function ProfileMediaEditor({
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState<QuarterTurn>(0);
   const [flipHorizontal, setFlipHorizontal] = useState(false);
-  const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit');
-  const [resultUrl, setResultUrl] = useState('');
   const [error, setError] = useState<string | null>(initialValidationError);
   const [processing, setProcessing] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -123,9 +121,8 @@ export function ProfileMediaEditor({
   useEffect(
     () => () => {
       if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-      if (resultUrl) URL.revokeObjectURL(resultUrl);
     },
-    [resultUrl]
+    []
   );
 
   useEffect(() => {
@@ -190,9 +187,6 @@ export function ProfileMediaEditor({
     const nextUrl = fileToValidate && !validationError ? URL.createObjectURL(fileToValidate) : '';
     previewUrlRef.current = nextUrl;
     setPreviewUrl(nextUrl);
-    if (resultUrl) URL.revokeObjectURL(resultUrl);
-    setResultUrl('');
-    setViewMode('edit');
     setError(validationError);
     setDimensions(null);
     setViewportSize(null);
@@ -206,8 +200,6 @@ export function ProfileMediaEditor({
     if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
     previewUrlRef.current = '';
     setPreviewUrl('');
-    if (resultUrl) URL.revokeObjectURL(resultUrl);
-    setResultUrl('');
     setDimensions(null);
     setError(null);
     onCancel();
@@ -261,38 +253,6 @@ export function ProfileMediaEditor({
     setFlipHorizontal(false);
     setZoom(1);
     setPosition({ x: 0, y: 0 });
-  }
-
-  async function showResult() {
-    if (!previewUrl || !dimensions || processing) return;
-    setProcessing(true);
-    setError(null);
-    try {
-      const result = await processProfileMedia({
-        sourceUrl: previewUrl,
-        sourceDimensions: dimensions,
-        aspectRatio,
-        zoom,
-        position,
-        rotation,
-        flipHorizontal,
-        outputWidth,
-        outputHeight,
-        mimeType: outputMimeType,
-        quality
-      });
-      if (resultUrl) URL.revokeObjectURL(resultUrl);
-      setResultUrl(URL.createObjectURL(result.blob));
-      setViewMode('preview');
-    } catch (cause) {
-      setError(
-        cause instanceof ApiRequestError
-          ? getProfileMediaErrorMessage(cause)
-          : 'Não foi possível gerar a prévia. Tente novamente.'
-      );
-    } finally {
-      setProcessing(false);
-    }
   }
 
   function handleViewportKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
@@ -405,15 +365,6 @@ export function ProfileMediaEditor({
 
         {previewUrl && (
           <>
-            <div className="profile-media-editor__view-switcher" role="tablist" aria-label="Modo do editor">
-              <button type="button" role="tab" aria-selected={viewMode === 'edit'} className={viewMode === 'edit' ? 'is-active' : ''} onClick={() => setViewMode('edit')}>Ajustar</button>
-              <button type="button" role="tab" aria-selected={viewMode === 'preview'} className={viewMode === 'preview' ? 'is-active' : ''} onClick={() => void showResult()} disabled={!dimensions || processing}>Pré-visualizar</button>
-            </div>
-            {viewMode === 'preview' && resultUrl ? (
-              <div className={`profile-media-editor__result profile-media-editor__result--${viewportShape}`}>
-                <img src={resultUrl} alt={viewportShape === 'circle' ? 'Prévia final do avatar' : 'Prévia final do banner'} />
-              </div>
-            ) : (
             <div
               ref={viewportRef}
               className="profile-media-editor__canvas"
@@ -450,8 +401,17 @@ export function ProfileMediaEditor({
               }}
               onPointerCancel={() => (dragRef.current = null)}
             >
-              <div className="profile-media-editor__stage" style={previewLayout?.stage}>
+              <div className="profile-media-editor__stage profile-media-editor__stage--background" style={previewLayout?.stage} aria-hidden="true">
                 <img
+                  src={previewUrl}
+                  alt=""
+                  draggable={false}
+                  style={previewLayout?.image}
+                />
+              </div>
+              <div className="profile-media-editor__active-clip">
+                <div className="profile-media-editor__stage" style={previewLayout?.stage}>
+                  <img
                   src={previewUrl}
                   alt={labels.previewAlt}
                   draggable={false}
@@ -469,13 +429,13 @@ export function ProfileMediaEditor({
                     }
                   }}
                   onError={() => setError('Não foi possível decodificar a imagem selecionada.')}
-                />
-              </div>
+                  />
+                </div>
               </div>
             </div>
-            )}
+            </div>
 
-            {viewMode === 'edit' && <div className="profile-media-editor__toolbar" aria-label="Ferramentas da imagem">
+            <div className="profile-media-editor__toolbar" aria-label="Ferramentas da imagem">
               <label className="profile-media-editor__zoom">
                 <span>
                   {labels.zoom}: {zoom.toFixed(2)}×
@@ -528,7 +488,7 @@ export function ProfileMediaEditor({
                   Redefinir
                 </Button>
               </div>
-            </div>}
+            </div>
           </>
         )}
 
