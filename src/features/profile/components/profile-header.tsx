@@ -48,9 +48,11 @@ export function ProfileHeader({
       >
         {bannerUrl ? <img src={bannerUrl} alt="" className="profile-header__banner-image" /> : null}
         {canEdit ? (
-          <span className="profile-header__banner-action" aria-hidden="true">
+          <span
+            className="profile-header__banner-action"
+            aria-hidden="true"
+          >
             <Camera size={18} />
-            Alterar banner
           </span>
         ) : null}
       </div>
