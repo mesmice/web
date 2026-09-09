@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Film, ImagePlus, RotateCcw } from 'lucide-react';
+import { ImagePlus, RotateCcw, X } from 'lucide-react';
 import { Button } from '../../../components/ui/button.js';
 import {
   PROFILE_MEDIA_ACCEPT,
@@ -95,21 +95,23 @@ export function ProfileMediaEditor({
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState<QuarterTurn>(0);
   const [flipHorizontal, setFlipHorizontal] = useState(false);
+  const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit');
+  const [resultUrl, setResultUrl] = useState('');
   const [error, setError] = useState<string | null>(initialValidationError);
   const [processing, setProcessing] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const cropViewportRef = useRef<HTMLDivElement>(null);
   const previewUrlRef = useRef(previewUrl);
   const dragRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   const titleId = useId();
   const descriptionId = useId();
   const errorId = useId();
-  const gifHelpId = useId();
 
   useEffect(() => {
     const handleResize = () => {
-      const viewport = viewportRef.current?.getBoundingClientRect();
+      const viewport = cropViewportRef.current?.getBoundingClientRect();
       if (viewport?.width && viewport.height) {
         setViewportSize({ width: viewport.width, height: viewport.height });
       }
@@ -121,8 +123,9 @@ export function ProfileMediaEditor({
   useEffect(
     () => () => {
       if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+      if (resultUrl) URL.revokeObjectURL(resultUrl);
     },
-    []
+    [resultUrl]
   );
 
   useEffect(() => {
@@ -187,6 +190,9 @@ export function ProfileMediaEditor({
     const nextUrl = fileToValidate && !validationError ? URL.createObjectURL(fileToValidate) : '';
     previewUrlRef.current = nextUrl;
     setPreviewUrl(nextUrl);
+    if (resultUrl) URL.revokeObjectURL(resultUrl);
+    setResultUrl('');
+    setViewMode('edit');
     setError(validationError);
     setDimensions(null);
     setViewportSize(null);
@@ -200,6 +206,8 @@ export function ProfileMediaEditor({
     if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
     previewUrlRef.current = '';
     setPreviewUrl('');
+    if (resultUrl) URL.revokeObjectURL(resultUrl);
+    setResultUrl('');
     setDimensions(null);
     setError(null);
     onCancel();
@@ -229,7 +237,7 @@ export function ProfileMediaEditor({
   }
 
   function movePosition(deltaX: number, deltaY: number) {
-    const viewport = viewportRef.current?.getBoundingClientRect();
+    const viewport = cropViewportRef.current?.getBoundingClientRect();
     if (!viewport || !transformedDimensions) return;
     const scale =
       Math.max(
@@ -253,6 +261,38 @@ export function ProfileMediaEditor({
     setFlipHorizontal(false);
     setZoom(1);
     setPosition({ x: 0, y: 0 });
+  }
+
+  async function showResult() {
+    if (!previewUrl || !dimensions || processing) return;
+    setProcessing(true);
+    setError(null);
+    try {
+      const result = await processProfileMedia({
+        sourceUrl: previewUrl,
+        sourceDimensions: dimensions,
+        aspectRatio,
+        zoom,
+        position,
+        rotation,
+        flipHorizontal,
+        outputWidth,
+        outputHeight,
+        mimeType: outputMimeType,
+        quality
+      });
+      if (resultUrl) URL.revokeObjectURL(resultUrl);
+      setResultUrl(URL.createObjectURL(result.blob));
+      setViewMode('preview');
+    } catch (cause) {
+      setError(
+        cause instanceof ApiRequestError
+          ? getProfileMediaErrorMessage(cause)
+          : 'Não foi possível gerar a prévia. Tente novamente.'
+      );
+    } finally {
+      setProcessing(false);
+    }
   }
 
   function handleViewportKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
@@ -317,13 +357,18 @@ export function ProfileMediaEditor({
         aria-describedby={descriptionId}
         onKeyDown={handleDialogKeyDown}
       >
-        <header>
+        <header className="profile-media-editor__header">
+          <div>
           <h2 id={titleId} className="profile-media-editor__title">
             {labels.title}
           </h2>
           <p id={descriptionId} className="profile-media-editor__description">
             {labels.description}
           </p>
+          </div>
+          <Button type="button" variant="ghost" aria-label="Fechar editor" onClick={cancel} disabled={processing}>
+            <X size={18} aria-hidden="true" />
+          </Button>
         </header>
 
         {previewUrl ? (
@@ -351,11 +396,6 @@ export function ProfileMediaEditor({
                   onChange={(event) => handleFile(event.target.files?.[0] ?? null)}
                 />
               </label>
-              <div className="profile-media-editor__media-option profile-media-editor__media-option--disabled">
-                <Film size={20} aria-hidden="true" />
-                <span>Enviar GIF</span>
-                <small id={gifHelpId}>Indisponível: o editor não preserva animações.</small>
-              </div>
             </div>
             <p className="profile-media-editor__selector-hint">
               Escolha uma imagem para ajustar o recorte antes do envio.
@@ -365,16 +405,27 @@ export function ProfileMediaEditor({
 
         {previewUrl && (
           <>
+            <div className="profile-media-editor__view-switcher" role="tablist" aria-label="Modo do editor">
+              <button type="button" role="tab" aria-selected={viewMode === 'edit'} className={viewMode === 'edit' ? 'is-active' : ''} onClick={() => setViewMode('edit')}>Ajustar</button>
+              <button type="button" role="tab" aria-selected={viewMode === 'preview'} className={viewMode === 'preview' ? 'is-active' : ''} onClick={() => void showResult()} disabled={!dimensions || processing}>Pré-visualizar</button>
+            </div>
+            {viewMode === 'preview' && resultUrl ? (
+              <div className={`profile-media-editor__result profile-media-editor__result--${viewportShape}`}>
+                <img src={resultUrl} alt={viewportShape === 'circle' ? 'Prévia final do avatar' : 'Prévia final do banner'} />
+              </div>
+            ) : (
             <div
               ref={viewportRef}
-              className={`profile-media-editor__viewport profile-media-editor__viewport--${viewportShape}`}
-              style={{
-                aspectRatio,
-                maxWidth: `min(100%, calc(min(50dvh, 440px) * ${aspectRatio}))`
-              }}
-              tabIndex={0}
-              role="group"
-              aria-label="Área de recorte. Use as setas para reposicionar a imagem."
+              className="profile-media-editor__canvas"
+              style={{ aspectRatio: viewportShape === 'circle' ? '4 / 3' : '16 / 10' }}
+            >
+              <div
+                ref={cropViewportRef}
+                className={`profile-media-editor__crop-window profile-media-editor__crop-window--${viewportShape}`}
+                style={{ aspectRatio, width: viewportShape === 'circle' ? '66%' : '92%' }}
+                tabIndex={0}
+                role="group"
+                aria-label="Área de recorte. Use as setas para reposicionar a imagem."
               onKeyDown={handleViewportKeyDown}
               onPointerDown={(event) => {
                 event.currentTarget.setPointerCapture(event.pointerId);
@@ -412,7 +463,7 @@ export function ProfileMediaEditor({
                       return;
                     }
                     setDimensions({ width: image.naturalWidth, height: image.naturalHeight });
-                    const viewport = viewportRef.current?.getBoundingClientRect();
+                    const viewport = cropViewportRef.current?.getBoundingClientRect();
                     if (viewport?.width && viewport.height) {
                       setViewportSize({ width: viewport.width, height: viewport.height });
                     }
@@ -420,9 +471,11 @@ export function ProfileMediaEditor({
                   onError={() => setError('Não foi possível decodificar a imagem selecionada.')}
                 />
               </div>
+              </div>
             </div>
+            )}
 
-            <div className="profile-media-editor__toolbar" aria-label="Ferramentas da imagem">
+            {viewMode === 'edit' && <div className="profile-media-editor__toolbar" aria-label="Ferramentas da imagem">
               <label className="profile-media-editor__zoom">
                 <span>
                   {labels.zoom}: {zoom.toFixed(2)}×
@@ -475,7 +528,7 @@ export function ProfileMediaEditor({
                   Redefinir
                 </Button>
               </div>
-            </div>
+            </div>}
           </>
         )}
 

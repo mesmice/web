@@ -54,14 +54,14 @@ function loadPreview() {
 }
 
 describe('ProfileMediaEditor', () => {
-  it('oferece seleção estática e mantém GIF explicitamente indisponível', () => {
+  it('oferece uma seleção estática simples sem apresentar GIF não suportado', () => {
     render(<ProfileMediaEditor aspectRatio={1} onCancel={vi.fn()} onConfirm={vi.fn()} />);
     expect(document.querySelector<HTMLInputElement>('.profile-media-editor__media-option input')).not.toBeNull();
     expect(document.querySelector<HTMLInputElement>('.profile-media-editor__media-option input')?.accept).toBe(
       'image/png,image/jpeg,image/webp'
     );
-    expect(screen.getByText('Enviar GIF')).toBeDefined();
-    expect(screen.getByText(/editor não preserva animações/)).toBeDefined();
+    expect(screen.getByText('Enviar imagem')).toBeDefined();
+    expect(screen.queryByText('Enviar GIF')).toBeNull();
   });
 
   it('cria preview, permite substituir e revoga cada Object URL', () => {
@@ -129,6 +129,48 @@ describe('ProfileMediaEditor', () => {
     const viewport = screen.getByRole('group', { name: /Área de recorte/ });
     fireEvent.keyDown(viewport, { key: 'ArrowRight' });
     expect(viewport).toBeTruthy();
+  });
+
+  it('mostra a imagem completa com máscara e alterna para a prévia final', async () => {
+    render(
+      <ProfileMediaEditor
+        file={new File(['a'], 'a.png', { type: 'image/png' })}
+        aspectRatio={1}
+        viewportShape="circle"
+        onCancel={vi.fn()}
+        onConfirm={vi.fn()}
+      />
+    );
+    loadPreview();
+    expect(document.querySelector('.profile-media-editor__canvas')).not.toBeNull();
+    expect(document.querySelector('.profile-media-editor__crop-window--circle')).not.toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: 'Pré-visualizar' }));
+    await waitFor(() => expect(screen.getByAltText('Prévia final do avatar')).toBeDefined());
+    expect(screen.queryByAltText('Prévia da imagem selecionada')).toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: 'Ajustar' }));
+    expect(screen.getByAltText('Prévia da imagem selecionada')).toBeDefined();
+  });
+
+  it('usa máscara proporcional para banner e permite tentar novamente após falha da prévia', async () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementationOnce((callback) => callback(null));
+    render(
+      <ProfileMediaEditor
+        file={new File(['a'], 'a.png', { type: 'image/png' })}
+        aspectRatio={4}
+        viewportShape="rectangle"
+        onCancel={vi.fn()}
+        onConfirm={vi.fn()}
+      />
+    );
+    loadPreview();
+    expect(document.querySelector('.profile-media-editor__crop-window--rectangle')).not.toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: 'Pré-visualizar' }));
+    expect((await screen.findByRole('alert')).textContent).toContain('Não foi possível gerar a prévia');
+    vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((callback, type) =>
+      callback(new Blob(['crop'], { type: String(type) }))
+    );
+    fireEvent.click(screen.getByRole('tab', { name: 'Pré-visualizar' }));
+    await waitFor(() => expect(screen.getByAltText('Prévia final do banner')).toBeDefined());
   });
 
   it('aplica 90/180/270, flip e redefine todos os ajustes', () => {
