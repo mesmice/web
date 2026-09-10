@@ -1,4 +1,4 @@
-import { Camera, Pencil } from 'lucide-react';
+import { Camera } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../../../components/ui/button.js';
 import type { PrivateUser } from '../../../lib/types/auth.js';
@@ -104,17 +104,6 @@ export function ProfileHeader({
           </Button>
         ) : null}
       </div>
-      {!canEdit ? (
-        <Button
-          type="button"
-          className="profile-header__edit"
-          disabled
-          title="Edição de perfil ainda não disponível"
-        >
-          <Pencil size={15} aria-hidden="true" />
-          Editar perfil
-        </Button>
-      ) : null}
       {editing ? (
         <ProfileMediaEditor
           aspectRatio={editing === 'avatar' ? 1 : 4}

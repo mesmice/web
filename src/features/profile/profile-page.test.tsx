@@ -26,9 +26,7 @@ describe('ProfilePage', () => {
     expect(screen.getByRole('heading', { name: 'Conexões' })).toBeDefined();
     expect(screen.getByRole('link', { name: /Site pessoal/ })).toBeDefined();
     expect(screen.getByText('Membro desde janeiro de 2026')).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Editar perfil' }).hasAttribute('disabled')).toBe(
-      true
-    );
+    expect(screen.queryByRole('button', { name: 'Editar perfil' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Tentar novamente' })).toBeNull();
     expect(screen.queryByRole('status', { name: 'Carregando perfil' })).toBeNull();
     expect(document.querySelector('.profile-meta__count')).toBeNull();
@@ -75,10 +73,10 @@ describe('ProfilePage', () => {
     expect(screen.queryByLabelText('Informações do perfil')).toBeNull();
   });
 
-  it('não renderiza status, presence ou lista pública de amigos', () => {
+  it('renderiza apenas a presença suportada pelo contrato e não lista social', () => {
     renderProfile();
 
-    expect(screen.queryByText(/online|offline|idle|dnd|invisible/i)).toBeNull();
+    expect(screen.getByLabelText('Presença: invisible')).toBeDefined();
     expect(screen.queryByRole('list', { name: /amigos/i })).toBeNull();
   });
 

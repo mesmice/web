@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { PrivateUser } from '../../lib/types/auth.js';
+import { useParams } from 'react-router-dom';
+import type { PublicUser } from '../../lib/types/auth.js';
 import { useAuthStore } from '../../stores/auth-store.js';
 import { ProfileAbout } from './components/profile-about.js';
 import { ProfileCustomizer } from './components/profile-customizer.js';
@@ -11,6 +12,7 @@ import { ProfileMeta } from './components/profile-meta.js';
 import { ProfileError, ProfileLoading } from './components/profile-query-state.js';
 import { ProfileShell } from './components/profile-shell.js';
 import { useMyProfile } from './queries/use-my-profile.js';
+import { usePublicProfile } from './queries/use-public-profile.js';
 import { useUpdateProfile } from './queries/use-update-profile.js';
 import { useUploadProfileMedia } from './queries/use-upload-profile-media.js';
 import type { ProfileMediaKind } from './api/profile-media-endpoints.js';
@@ -25,10 +27,10 @@ import {
 } from './profile-theme.js';
 
 export interface ProfileExperienceProps {
-  profile: PrivateUser;
+  profile: PublicUser;
   isOwner?: boolean;
   onSaveBio?: (bio: string | null) => Promise<void>;
-  onSaveLinks?: (links: PrivateUser['externalLinks']) => Promise<void>;
+  onSaveLinks?: (links: PublicUser['externalLinks']) => Promise<void>;
   onUploadMedia?: (kind: ProfileMediaKind, media: ProcessedProfileMedia) => Promise<void>;
   friendsCount?: number | null;
   tagline?: string | null;
@@ -94,7 +96,11 @@ export function ProfileExperience({
         <div className="profile-shell__content">
           <div className="profile-shell__main-grid">
             <div className="profile-shell__identity-region">
-              <ProfileIdentity displayName={profile.displayName} username={profile.username} />
+              <ProfileIdentity
+                displayName={profile.displayName}
+                username={profile.username}
+                presence={profile.presence}
+              />
               {tagline ? <p className="profile-shell__tagline">“{tagline}”</p> : null}
               <div className="profile-page__about profile-mobile-card">
                 <ProfileAbout
@@ -114,18 +120,20 @@ export function ProfileExperience({
           </div>
         </div>
       </ProfileShell>
-      <ProfileCustomizer
-        displayName={profile.displayName}
-        profileTheme={profileTheme}
-        confirmedProfileTheme={confirmedProfileTheme}
-        nicknameTheme={nicknameTheme}
-        confirmedNicknameTheme={confirmedNicknameTheme}
-        onProfileThemeChange={setProfileTheme}
-        onProfileThemeConfirm={setConfirmedProfileTheme}
-        onNicknameThemeChange={setNicknameTheme}
-        onNicknameThemeConfirm={setConfirmedNicknameTheme}
-        onReset={resetCustomization}
-      />
+      {isOwner ? (
+        <ProfileCustomizer
+          displayName={profile.displayName}
+          profileTheme={profileTheme}
+          confirmedProfileTheme={confirmedProfileTheme}
+          nicknameTheme={nicknameTheme}
+          confirmedNicknameTheme={confirmedNicknameTheme}
+          onProfileThemeChange={setProfileTheme}
+          onProfileThemeConfirm={setConfirmedProfileTheme}
+          onNicknameThemeChange={setNicknameTheme}
+          onNicknameThemeConfirm={setConfirmedNicknameTheme}
+          onReset={resetCustomization}
+        />
+      ) : null}
     </div>
   );
 }
@@ -166,4 +174,30 @@ export function ProfilePage() {
   const isAuthenticated = useAuthStore((state) => state.status === 'authenticated');
 
   return isAuthenticated ? <AuthenticatedProfilePage /> : null;
+}
+
+interface PublicProfilePageProps {
+  userId: string;
+}
+
+export function PublicProfilePage({ userId }: PublicProfilePageProps) {
+  const profileQuery = usePublicProfile(userId);
+
+  if (profileQuery.isPending) return <ProfileLoading />;
+  if (profileQuery.isError) {
+    return (
+      <ProfileError
+        notFound={profileQuery.error instanceof Error && 'status' in profileQuery.error && profileQuery.error.status === 404}
+        onRetry={() => void profileQuery.refetch()}
+        retrying={profileQuery.isFetching}
+      />
+    );
+  }
+
+  return <ProfileExperience profile={profileQuery.data} />;
+}
+
+export function PublicProfileRoute() {
+  const { userId = '' } = useParams();
+  return <PublicProfilePage userId={userId} />;
 }

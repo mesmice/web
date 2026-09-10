@@ -14,13 +14,16 @@ export function ProfileLoading() {
 interface ProfileErrorProps {
   onRetry(): void
   retrying: boolean
+  notFound?: boolean
 }
 
-export function ProfileError({ onRetry, retrying }: ProfileErrorProps) {
+export function ProfileError({ onRetry, retrying, notFound = false }: ProfileErrorProps) {
   return (
     <section className="profile-query-state" aria-labelledby="profile-error-title">
-      <h1 id="profile-error-title">Não foi possível carregar seu perfil</h1>
-      <p>Tente novamente em instantes.</p>
+      <h1 id="profile-error-title">
+        {notFound ? 'Perfil não encontrado' : 'Não foi possível carregar o perfil'}
+      </h1>
+      <p>{notFound ? 'Este utilizador não existe ou não está disponível.' : 'Tente novamente em instantes.'}</p>
       <Button type="button" onClick={onRetry} disabled={retrying}>
         {retrying ? 'Tentando novamente…' : 'Tentar novamente'}
       </Button>
