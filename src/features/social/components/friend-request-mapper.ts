@@ -2,6 +2,7 @@ import type { FriendRequestItem, FriendRequestStatus } from './friend-requests.j
 
 interface FriendRequestApiShape {
   id?: string | number | null;
+  userId?: string | null;
   displayName?: string | null;
   name?: string | null;
   username?: string | null;
@@ -23,6 +24,7 @@ export function mapFriendRequestFromApi(raw: FriendRequestApiShape): FriendReque
 
   return {
     id: String(raw.id ?? displayName),
+    userId: raw.userId ?? undefined,
     displayName,
     username: raw.username ?? null,
     avatarUrl: raw.avatarUrl ?? null,

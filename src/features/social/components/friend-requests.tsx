@@ -5,6 +5,7 @@ export type FriendRequestStatus = 'pending' | 'accepted' | 'declined';
 
 export interface FriendRequestItem {
   id: string;
+  userId?: string;
   displayName: string;
   username?: string | null;
   avatarUrl?: string | null;

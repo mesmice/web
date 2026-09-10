@@ -5,14 +5,11 @@ import { LoginPage } from '../features/auth/login-page.js';
 import { ForgotPasswordPage, ResetPasswordPage } from '../features/auth/password-recovery-page.js';
 import { RegisterPage } from '../features/auth/register-page.js';
 import { RequireAuth } from '../features/auth/require-auth.js';
-import { ProfilePage } from '../features/profile/profile-page.js';
+import { ProfilePage, PublicProfileRoute } from '../features/profile/profile-page.js';
 import { SpacesPage } from '../features/spaces/pages/spaces-page.js';
 
 export function createProfileRoute(isDevelopment: boolean): RouteObject {
-  if (isDevelopment) {
-    return { path: 'profile', element: <ProfilePage /> };
-  }
-
+  void isDevelopment;
   return {
     element: <RequireAuth />,
     children: [{ path: 'profile', element: <ProfilePage /> }]
@@ -33,7 +30,11 @@ export const router = createBrowserRouter([
         element: <RequireAuth />,
         children: [{ path: 'app', element: <SpacesPage /> }]
       },
-      createProfileRoute(import.meta.env.DEV)
+      createProfileRoute(import.meta.env.DEV),
+      {
+        element: <RequireAuth />,
+        children: [{ path: 'users/:userId', element: <PublicProfileRoute /> }]
+      }
     ]
   }
 ]);

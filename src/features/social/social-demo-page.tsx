@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../../stores/auth-store.js';
 import {
@@ -15,6 +16,7 @@ import { FriendRequests } from './components/friend-requests.js';
 import { mapFriendRequestFromApi } from './components/friend-request-mapper.js';
 import { SocialNavigation, type SocialTab } from './components/social-navigation.js';
 import { ConversationPanel } from '../messages/components/conversation-panel.js';
+import { socialKeys } from './api/social-query-keys.js';
 
 function getErrorMessage(error: unknown) {
   return error && typeof error === 'object' && 'message' in error
@@ -45,13 +47,14 @@ export function SocialDemoPage() {
   const [activeTab, setActiveTab] = useState<SocialTab>('all');
   const [selectedFriend, setSelectedFriend] = useState<FriendListItem | null>(null);
   const currentUserId = useAuthStore((state) => state.user?.id);
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const friendsQuery = useQuery({
-    queryKey: ['friends'],
+    queryKey: socialKeys.friends(),
     queryFn: () => getFriends()
   });
   const requestsQuery = useQuery({
-    queryKey: ['friend-requests'],
+    queryKey: socialKeys.requests(),
     queryFn: getFriendRequests
   });
   const requestMutation = useMutation({
@@ -67,8 +70,8 @@ export function SocialDemoPage() {
     },
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['friends'] }),
-        queryClient.invalidateQueries({ queryKey: ['friend-requests'] })
+        queryClient.invalidateQueries({ queryKey: socialKeys.friends() }),
+        queryClient.invalidateQueries({ queryKey: socialKeys.requests() })
       ]);
     }
   });
@@ -86,6 +89,7 @@ export function SocialDemoPage() {
       requestsQuery.data?.items.map(({ request, requester }) =>
         mapFriendRequestFromApi({
           id: request.id,
+          userId: requester.id,
           displayName: requester.displayName,
           username: requester.username,
           avatarUrl: requester.avatarUrl,
@@ -119,7 +123,7 @@ export function SocialDemoPage() {
                 isLoading={friendsQuery.isLoading}
                 error={friendsQuery.isError ? getErrorMessage(friendsQuery.error) : null}
                 onRetry={() => void friendsQuery.refetch()}
-                onProfileClick={(friend) => console.log('Ver perfil:', friend.displayName)}
+                onProfileClick={(friend) => navigate(`/users/${encodeURIComponent(friend.id)}`)}
                 onMessageClick={setSelectedFriend}
               />
               {selectedFriend ? (
@@ -157,7 +161,9 @@ export function SocialDemoPage() {
               onDecline={(friend) =>
                 requestMutation.mutate({ requestId: friend.id, action: 'decline' })
               }
-              onViewProfile={(friend) => console.log('Perfil:', friend.displayName)}
+              onViewProfile={(friend) => {
+                if (friend.userId) navigate(`/users/${encodeURIComponent(friend.userId)}`);
+              }}
             />
           </div>
         </div>

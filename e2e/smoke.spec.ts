@@ -131,10 +131,10 @@ test('rota de login responde', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Bem-vindo de volta!' })).toBeVisible();
 });
 
-test('rota de perfil permite acesso temporário ao visitante anônimo', async ({ page }) => {
+test('rota de perfil exige autenticação para visitante anônimo', async ({ page }) => {
   await page.goto('/profile');
-  await expect(page).toHaveURL(/\/profile$/);
-  await expect(page.getByRole('heading', { name: 'Maria Souza' })).toBeVisible();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole('heading', { name: 'Bem-vindo de volta!' })).toBeVisible();
 });
 
 async function mockAuthenticatedProfile(page: Page) {

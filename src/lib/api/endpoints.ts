@@ -9,37 +9,20 @@ import type {
   RegisterPayload
 } from '../types/api.js';
 import type { PrivateUser } from '../types/auth.js';
+import type {
+  FriendRequest,
+  FriendRequestsResponse,
+  FriendSummary,
+  FriendsResponse,
+  IncomingFriendRequest,
+  PublicUser,
+  CursorPage
+} from '../types/api.js';
 
-export type SocialUser = Pick<
-  PrivateUser,
-  'id' | 'username' | 'displayName' | 'bio' | 'avatarUrl' | 'presence' | 'lastActiveAt'
->;
-
-export interface FriendSummaryResponse {
-  user: SocialUser;
-  since: string;
-}
-
-export interface FriendsResponse {
-  items: FriendSummaryResponse[];
-  meta: { nextCursor: string | null };
-}
-
-export interface FriendRequestResponse {
-  id: string;
-  requesterId: string;
-  addresseeId: string;
-  createdAt: string;
-}
-
-export interface IncomingFriendRequestResponse {
-  request: FriendRequestResponse;
-  requester: SocialUser;
-}
-
-export interface FriendRequestsResponse {
-  items: IncomingFriendRequestResponse[];
-}
+export type SocialUser = PublicUser;
+export type FriendSummaryResponse = FriendSummary;
+export type FriendRequestResponse = FriendRequest;
+export type IncomingFriendRequestResponse = IncomingFriendRequest;
 
 export interface DirectMessageChannel {
   id: string;
@@ -145,6 +128,25 @@ export function getMe(): Promise<{ user: PrivateUser }> {
   return apiFetch('/users/me');
 }
 
+export function getPublicProfile(userId: string): Promise<{ user: PublicUser }> {
+  return apiFetch(`/users/${encodeURIComponent(userId)}`);
+}
+
+export interface SearchUsersOptions {
+  limit?: number;
+  cursor?: string;
+}
+
+export function searchUsers(
+  query: string,
+  options?: SearchUsersOptions
+): Promise<CursorPage<PublicUser>> {
+  const params = new URLSearchParams({ query });
+  if (options?.limit !== undefined) params.set('limit', String(options.limit));
+  if (options?.cursor) params.set('cursor', options.cursor);
+  return apiFetch(`/users/search?${params.toString()}`);
+}
+
 export function getSpaces(): Promise<SpaceListResponse> {
   return apiFetch('/spaces');
 }
@@ -179,6 +181,17 @@ export function getFriendRequests(): Promise<FriendRequestsResponse> {
 
 export function acceptFriendRequest(requestId: string): Promise<{ friend: FriendSummaryResponse }> {
   return apiFetch(`/friends/requests/${requestId}/accept`, { method: 'POST' });
+}
+
+export function sendFriendRequest(addresseeId: string): Promise<
+  | { accepted: true; friend: FriendSummaryResponse }
+  | { accepted: false; request: FriendRequestResponse }
+> {
+  return apiFetch('/friends/requests', { method: 'POST', body: { addresseeId } });
+}
+
+export function removeFriend(friendId: string): Promise<void> {
+  return apiFetch(`/friends/${encodeURIComponent(friendId)}`, { method: 'DELETE' });
 }
 
 export function declineFriendRequest(requestId: string): Promise<void> {

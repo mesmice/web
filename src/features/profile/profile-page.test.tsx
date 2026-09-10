@@ -1,30 +1,22 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { PrivateUser } from '../../lib/types/auth.js';
-import {
-  PROFILE_DEMO,
-  PROFILE_DEMO_FRIENDS_COUNT,
-  PROFILE_DEMO_HIGHLIGHT,
-  PROFILE_DEMO_TAGLINE
-} from './profile-demo-data.js';
+import { PROFILE_DEMO } from './profile-demo-data.js';
 import { ProfileExperience } from './profile-page.js';
 
 afterEach(() => cleanup());
 
-function renderProfile(overrides: Partial<PrivateUser> = {}, friendsCount?: number | null) {
+function renderProfile(overrides: Partial<PrivateUser> = {}) {
   render(
     <ProfileExperience
       profile={{ ...PROFILE_DEMO, ...overrides }}
       isOwner
-      friendsCount={friendsCount === undefined ? PROFILE_DEMO_FRIENDS_COUNT : friendsCount}
-      tagline={PROFILE_DEMO_TAGLINE}
-      highlight={PROFILE_DEMO_HIGHLIGHT}
     />
   );
 }
 
 describe('ProfilePage', () => {
-  it('renderiza o perfil de demonstração sem depender de requests', () => {
+  it('renderiza uma composição de preview sem depender de requests', () => {
     renderProfile();
 
     expect(screen.getByRole('heading', { level: 1, name: 'Maria Souza' })).toBeDefined();
@@ -33,26 +25,15 @@ describe('ProfilePage', () => {
     expect(screen.getByText(PROFILE_DEMO.bio!)).toBeDefined();
     expect(screen.getByRole('heading', { name: 'Conexões' })).toBeDefined();
     expect(screen.getByRole('link', { name: /Site pessoal/ })).toBeDefined();
-    expect(screen.getByText('128 amigos')).toBeDefined();
     expect(screen.getByText('Membro desde janeiro de 2026')).toBeDefined();
-    expect(screen.getByRole('heading', { name: 'Destaque' })).toBeDefined();
-    expect(screen.getByText('Space Song')).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Editar perfil' }).hasAttribute('disabled')).toBe(
-      true
-    );
+    expect(screen.queryByRole('button', { name: 'Editar perfil' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Tentar novamente' })).toBeNull();
     expect(screen.queryByRole('status', { name: 'Carregando perfil' })).toBeNull();
     expect(document.querySelector('.profile-meta__count')).toBeNull();
 
     const memberSince = screen.getByText('Membro desde janeiro de 2026');
-    const highlightTitle = screen.getByRole('heading', { name: 'Destaque' });
     const connectionsTitle = screen.getByRole('heading', { name: 'Conexões' });
-    expect(
-      memberSince.compareDocumentPosition(highlightTitle) & Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy();
-    expect(
-      connectionsTitle.compareDocumentPosition(highlightTitle) & Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy();
+    expect(memberSince.compareDocumentPosition(connectionsTitle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('compõe mídia, links e badges fornecidos diretamente pela UI', () => {
@@ -81,9 +62,8 @@ describe('ProfilePage', () => {
         bannerUrl: null,
         externalLinks: [],
         badges: [],
-        createdAt: 'invalid'
-      },
-      null
+      createdAt: 'invalid'
+    }
     );
 
     expect(screen.getByLabelText('Avatar de Maria Souza').textContent).toBe('M');
@@ -93,10 +73,10 @@ describe('ProfilePage', () => {
     expect(screen.queryByLabelText('Informações do perfil')).toBeNull();
   });
 
-  it('não renderiza status, presence ou lista pública de amigos', () => {
+  it('renderiza apenas a presença suportada pelo contrato e não lista social', () => {
     renderProfile();
 
-    expect(screen.queryByText(/online|offline|idle|dnd|invisible/i)).toBeNull();
+    expect(screen.getByLabelText('Presença: invisible')).toBeDefined();
     expect(screen.queryByRole('list', { name: /amigos/i })).toBeNull();
   });
 
@@ -186,7 +166,7 @@ describe('ProfilePage', () => {
     expect(document.querySelector('.profile-page__about.profile-mobile-card')).not.toBeNull();
     expect(document.querySelector('.profile-page__about .profile-meta')).not.toBeNull();
     expect(document.querySelector('.profile-connections')).not.toBeNull();
-    expect(document.querySelector('.profile-highlight')).not.toBeNull();
+    expect(document.querySelector('.profile-highlight')).toBeNull();
     expect(document.querySelector('.profile-header')?.previousElementSibling).toBeNull();
   });
 
