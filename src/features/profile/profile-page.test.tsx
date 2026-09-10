@@ -206,4 +206,22 @@ describe('ProfilePage', () => {
     expect(shell.dataset.nicknameMode).toBe('solid');
     expect(shell.style.getPropertyValue('--nickname-color-primary')).toBe('#FFFFFF');
   });
+
+  it('mantém a personalização fora do preview e atualiza o card com o draft local', () => {
+    renderProfile();
+    expect(screen.queryByLabelText('Display name / nick')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Personalizar perfil' })).toBeNull();
+
+    openEditor();
+    const displayNameInput = screen.getByLabelText('Display name / nick');
+    fireEvent.change(displayNameInput, { target: { value: 'Maria em preview' } });
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Maria em preview' })).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'Personalizar perfil' })).toBeDefined();
+    expect(screen.getByRole('status', { name: 'Prévia local' })).toBeDefined();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ver perfil' }));
+    expect(screen.queryByLabelText('Display name / nick')).toBeNull();
+    expect(screen.getByRole('heading', { level: 1, name: 'Maria em preview' })).toBeDefined();
+  });
 });

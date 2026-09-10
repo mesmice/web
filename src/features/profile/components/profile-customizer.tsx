@@ -105,6 +105,7 @@ function ColorControl({
 
 interface ProfileCustomizerProps {
   displayName: string;
+  onDisplayNameChange(value: string): void;
   profileTheme: ProfileThemeColors;
   confirmedProfileTheme: ProfileThemeColors;
   nicknameTheme: NicknameTheme;
@@ -118,6 +119,7 @@ interface ProfileCustomizerProps {
 
 export function ProfileCustomizer({
   displayName,
+  onDisplayNameChange,
   profileTheme,
   confirmedProfileTheme,
   nicknameTheme,
@@ -153,11 +155,25 @@ export function ProfileCustomizer({
     <aside className="profile-customizer" aria-labelledby="profile-customizer-title">
       <h2 id="profile-customizer-title">Personalizar perfil</h2>
       <p className="profile-customizer__notice" role="note">
-        As alterações abaixo são apenas uma pré-visualização local nesta etapa.
+        Ajuste o visual e veja o resultado no card ao lado. As alterações de cor continuam a exigir confirmação.
       </p>
+
+      <section className="profile-customizer__section" aria-labelledby="profile-identity-customizer-title">
+        <h3 id="profile-identity-customizer-title">Identidade</h3>
+        <p className="profile-customizer__description">O nome abaixo é uma pré-visualização local nesta etapa.</p>
+        <label htmlFor="profile-display-name">Display name / nick</label>
+        <Input
+          id="profile-display-name"
+          value={displayName}
+          maxLength={80}
+          onChange={(event) => onDisplayNameChange(event.target.value)}
+        />
+        <span className="profile-customizer__pending" role="status" aria-label="Prévia local">Prévia local</span>
+      </section>
 
       <section className="profile-customizer__section" aria-labelledby="profile-theme-title">
         <h3 id="profile-theme-title">Tema do perfil</h3>
+        <p className="profile-customizer__description">Escolha cores para a superfície e os detalhes do seu perfil.</p>
         <ColorControl
           key={`profile-primary-${confirmedProfileTheme.primary}`}
           id="profile-primary"
@@ -193,6 +209,7 @@ export function ProfileCustomizer({
                 } as CSSProperties}
                 aria-label={`Usar preset ${preset.name}`}
                 aria-pressed={selected}
+                title={preset.name}
                 onClick={() => applyProfilePreset(preset)}
               />
             );
@@ -210,6 +227,7 @@ export function ProfileCustomizer({
 
       <section className="profile-customizer__section" aria-labelledby="nickname-theme-title">
         <h3 id="nickname-theme-title">Nick</h3>
+        <p className="profile-customizer__description">Defina como o seu display name aparece no card.</p>
         <fieldset className="profile-customizer__modes">
           <legend>Estilo</legend>
           {(['solid', 'gradient'] as NicknameMode[]).map((mode) => (

@@ -9,6 +9,30 @@
   background: var(--color-surface-elevated);
 }
 
+.profile-customizer__notice,
+.profile-customizer__description {
+  margin: -10px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.profile-customizer__section > label {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.profile-customizer__pending {
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--color-action-secondary);
+  color: var(--color-text-secondary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
 .profile-customizer h2,
 .profile-customizer h3,
 .profile-customizer legend {
@@ -236,6 +260,8 @@
 
 @media (max-width: 720px) {
   .profile-customizer {
-    display: none;
+    position: static;
+    margin: 0 var(--space-4) var(--space-6);
+    border-radius: 16px;
   }
 }

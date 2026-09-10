@@ -48,6 +48,7 @@ export function ProfileExperience({
   highlight = null
 }: ProfileExperienceProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [previewDisplayName, setPreviewDisplayName] = useState(profile.displayName);
   const defaultProfileTheme = {
     ...DEFAULT_PROFILE_THEME,
     primary: profile.profileColor?.toUpperCase() ?? DEFAULT_PROFILE_THEME.primary
@@ -61,6 +62,7 @@ export function ProfileExperience({
   const readableColors = getReadableProfileColors(profileTheme.primary, profileTheme.secondary);
 
   function resetCustomization() {
+    setPreviewDisplayName(profile.displayName);
     setProfileTheme(defaultProfileTheme);
     setConfirmedProfileTheme(defaultProfileTheme);
     setNicknameTheme(DEFAULT_NICK_THEME);
@@ -103,7 +105,7 @@ export function ProfileExperience({
           avatarThumbUrl={profile.avatarThumbUrl}
           avatarFrameUrl={profile.avatarFrameUrl}
           bannerUrl={profile.bannerUrl}
-          displayName={profile.displayName}
+          displayName={previewDisplayName}
           isOwner={isOwner && isEditing}
           onUploadMedia={onUploadMedia}
         />
@@ -111,7 +113,7 @@ export function ProfileExperience({
           <div className="profile-shell__main-grid">
             <div className="profile-shell__identity-region">
               <ProfileIdentity
-                displayName={profile.displayName}
+                displayName={previewDisplayName}
                 username={profile.username}
                 presence={profile.presence}
               />
@@ -136,7 +138,8 @@ export function ProfileExperience({
       </ProfileShell>
       {isOwner && isEditing ? (
         <ProfileCustomizer
-          displayName={profile.displayName}
+          displayName={previewDisplayName}
+          onDisplayNameChange={setPreviewDisplayName}
           profileTheme={profileTheme}
           confirmedProfileTheme={confirmedProfileTheme}
           nicknameTheme={nicknameTheme}
