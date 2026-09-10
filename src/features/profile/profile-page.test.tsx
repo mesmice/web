@@ -121,4 +121,80 @@ describe('ProfilePage', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Maria Souza' })).toBeDefined()
     expect(requests).toBe(2)
   })
+
+  it('edita o nome de exibição via PATCH /users/me mantendo o username', async () => {
+    let receivedBody: unknown
+    const updatedUser = { ...MOCK_USER, displayName: 'Lidia Check' }
+    server.use(
+      http.get('*/api/v1/users/me', () => HttpResponse.json({ user: MOCK_USER })),
+      http.patch('*/api/v1/users/me', async ({ request }) => {
+        receivedBody = await request.json()
+        return HttpResponse.json({ user: updatedUser })
+      })
+    )
+    renderProfile()
+    await screen.findByRole('heading', { level: 1, name: 'Maria Souza' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar perfil' }))
+    const nameInput = screen.getByLabelText('Nome de exibição') as HTMLInputElement
+    const usernameInput = screen.getByLabelText('Username') as HTMLInputElement
+
+    expect(usernameInput.value).toBe('maria')
+
+    fireEvent.change(nameInput, { target: { value: 'Lidia Check' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Lidia Check' })).toBeDefined()
+    expect(receivedBody).toEqual({ displayName: 'Lidia Check' })
+    expect(screen.getByText('@maria')).toBeDefined()
+    expect(screen.queryByRole('button', { name: 'Cancelar' })).toBeNull()
+  })
+
+  it('edita o username via PATCH /users/me após confirmar disponibilidade', async () => {
+    let receivedBody: unknown
+    const updatedUser = { ...MOCK_USER, username: 'lidia_check' }
+    server.use(
+      http.get('*/api/v1/users/me', () => HttpResponse.json({ user: MOCK_USER })),
+      http.get('*/api/v1/users/username-available', ({ request }) => {
+        const value = new URL(request.url).searchParams.get('value')
+        return HttpResponse.json({ available: value === 'lidia_check' })
+      }),
+      http.patch('*/api/v1/users/me', async ({ request }) => {
+        receivedBody = await request.json()
+        return HttpResponse.json({ user: updatedUser })
+      })
+    )
+    renderProfile()
+    await screen.findByRole('heading', { level: 1, name: 'Maria Souza' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar perfil' }))
+    const usernameInput = screen.getByLabelText('Username') as HTMLInputElement
+
+    fireEvent.change(usernameInput, { target: { value: 'lidia_check' } })
+    await screen.findByText('Username disponível!')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+
+    await screen.findByText('@lidia_check')
+    expect(receivedBody).toEqual({ username: 'lidia_check' })
+  })
+
+  it('bloqueia o envio quando o username já está em uso', async () => {
+    server.use(
+      http.get('*/api/v1/users/me', () => HttpResponse.json({ user: MOCK_USER })),
+      http.get('*/api/v1/users/username-available', () => HttpResponse.json({ available: false }))
+    )
+    renderProfile()
+    await screen.findByRole('heading', { level: 1, name: 'Maria Souza' })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar perfil' }))
+    const usernameInput = screen.getByLabelText('Username') as HTMLInputElement
+
+    fireEvent.change(usernameInput, { target: { value: 'ocupado' } })
+    await screen.findByText('Este username já está em uso.')
+
+    expect((screen.getByRole('button', { name: 'Salvar' }) as HTMLButtonElement).disabled).toBe(
+      true
+    )
+  })
 })

@@ -3,6 +3,7 @@ import type { ExternalLink, PrivateUser, UserPresence } from '../../../lib/types
 
 export interface UpdateProfilePayload {
   displayName?: string
+  username?: string
   bio?: string | null
   avatarUrl?: string | null
   bannerUrl?: string | null
@@ -28,4 +29,10 @@ export async function updateProfile(payload: UpdateProfilePayload): Promise<Priv
     body: payload
   })
   return response.user
+}
+
+export async function checkUsernameAvailability(value: string): Promise<{ available: boolean }> {
+  return apiFetch<{ available: boolean }>(
+    `/users/username-available?value=${encodeURIComponent(value)}`
+  )
 }
