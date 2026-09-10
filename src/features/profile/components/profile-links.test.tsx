@@ -20,6 +20,14 @@ describe('ProfileLinks', () => {
     expect(screen.queryByRole('link', { name: /Legado/ })).toBeNull();
   });
 
+  it('mantém URLs longas contidas e expõe descrição e ação acessíveis', () => {
+    render(<ProfileLinks links={[{ label: 'Projeto', url: `https://example.com/${'segmento-'.repeat(70)}` }]} isOwner onSave={vi.fn()} />);
+    expect(screen.getByText('Partilhe os seus projetos e outros lugares onde as pessoas podem encontrar você.')).toBeDefined();
+    expect(screen.getByRole('link', { name: /Projeto/ })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Editar links' })).toBeDefined();
+    expect(document.querySelector('.profile-connections__list li')).not.toBeNull();
+  });
+
   it('mostra CTA vazio ao owner e permite adicionar, editar, remover e cancelar', () => {
     const { rerender } = render(<ProfileLinks links={[]} isOwner onSave={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Adicionar link' }));

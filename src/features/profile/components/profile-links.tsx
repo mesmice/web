@@ -71,6 +71,7 @@ export function ProfileLinks({ links, isOwner = false, onSave }: ProfileLinksPro
         <h2 id="profile-links-title">Conexões</h2>
         {isOwner && !isEditing && links.length ? <button className="profile-links__icon-button" type="button" onClick={startEditing} aria-label="Editar links"><Pencil size={16} aria-hidden="true" /></button> : null}
       </div>
+      <p className="profile-links__description">Partilhe os seus projetos e outros lugares onde as pessoas podem encontrar você.</p>
       {isEditing ? (
         <div className="profile-links__editor">
           <ol className="profile-links__fields" aria-label="Links em edição">
