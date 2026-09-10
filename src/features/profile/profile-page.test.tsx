@@ -15,6 +15,10 @@ function renderProfile(overrides: Partial<PrivateUser> = {}) {
   );
 }
 
+function openEditor() {
+  fireEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+}
+
 describe('ProfilePage', () => {
   it('renderiza uma composição de preview sem depender de requests', () => {
     renderProfile();
@@ -26,7 +30,9 @@ describe('ProfilePage', () => {
     expect(screen.getByRole('heading', { name: 'Conexões' })).toBeDefined();
     expect(screen.getByRole('link', { name: /Site pessoal/ })).toBeDefined();
     expect(screen.getByText('Membro desde janeiro de 2026')).toBeDefined();
-    expect(screen.queryByRole('button', { name: 'Editar perfil' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Editar perfil' })).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Alterar banner' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Alterar avatar' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Tentar novamente' })).toBeNull();
     expect(screen.queryByRole('status', { name: 'Carregando perfil' })).toBeNull();
     expect(document.querySelector('.profile-meta__count')).toBeNull();
@@ -67,7 +73,7 @@ describe('ProfilePage', () => {
     );
 
     expect(screen.getByLabelText('Avatar de Maria Souza').textContent).toBe('M');
-    expect(screen.getByText('Nenhuma bio adicionada.')).toBeDefined();
+    expect(screen.getByText('Sem bio no momento.')).toBeDefined();
     expect(screen.queryByRole('heading', { name: 'Conexões' })).toBeNull();
     expect(document.querySelector('.profile-header__banner-image')).toBeNull();
     expect(screen.queryByLabelText('Informações do perfil')).toBeNull();
@@ -82,6 +88,7 @@ describe('ProfilePage', () => {
 
   it('permite alterar as duas cores, aplicar um preset e restaurar o tema', () => {
     renderProfile();
+    openEditor();
     const shell = document.querySelector<HTMLElement>('.profile-shell')!;
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Cor principal hexadecimal' }), {
@@ -107,6 +114,7 @@ describe('ProfilePage', () => {
 
   it('pré-visualiza, confirma e cancela cores do Profile e do Nick', () => {
     renderProfile();
+    openEditor();
     const shell = document.querySelector<HTMLElement>('.profile-shell')!;
     const primaryInput = screen.getByRole('textbox', { name: 'Cor principal hexadecimal' });
     const nickInput = screen.getByRole('textbox', { name: 'Cor 1 hexadecimal' });
@@ -143,6 +151,7 @@ describe('ProfilePage', () => {
     'mantém App Theme %s independente do Profile %s/%s',
     (appTheme, primary, secondary, foreground) => {
       renderProfile();
+      openEditor();
       const shell = document.querySelector<HTMLElement>('.profile-shell')!;
 
       fireEvent.change(screen.getByRole('textbox', { name: 'Cor principal hexadecimal' }), {
@@ -167,11 +176,12 @@ describe('ProfilePage', () => {
     expect(document.querySelector('.profile-page__about .profile-meta')).not.toBeNull();
     expect(document.querySelector('.profile-connections')).not.toBeNull();
     expect(document.querySelector('.profile-highlight')).toBeNull();
-    expect(document.querySelector('.profile-header')?.previousElementSibling).toBeNull();
+    expect(document.querySelector('.profile-header')?.previousElementSibling?.classList.contains('profile-preview__toolbar')).toBe(true);
   });
 
   it('aplica Nick sólido e gradiente somente ao Display Name e acompanha o preview', () => {
     renderProfile();
+    openEditor();
     const shell = document.querySelector<HTMLElement>('.profile-shell')!;
     const displayName = screen.getByRole('heading', { level: 1, name: 'Maria Souza' });
     const username = screen.getByText('@maria');

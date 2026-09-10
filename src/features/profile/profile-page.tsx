@@ -47,6 +47,7 @@ export function ProfileExperience({
   tagline = null,
   highlight = null
 }: ProfileExperienceProps) {
+  const [isEditing, setIsEditing] = useState(false);
   const defaultProfileTheme = {
     ...DEFAULT_PROFILE_THEME,
     primary: profile.profileColor?.toUpperCase() ?? DEFAULT_PROFILE_THEME.primary
@@ -67,7 +68,7 @@ export function ProfileExperience({
   }
 
   return (
-    <div className="profile-page-experience">
+    <div className={`profile-page-experience${isEditing ? ' profile-page-experience--editing' : ''}`}>
       <ProfileShell
         profileColorPrimary={profileTheme.primary}
         profileColorSecondary={profileTheme.secondary}
@@ -84,13 +85,26 @@ export function ProfileExperience({
         nicknameColorPrimary={nicknameTheme.primary}
         nicknameColorSecondary={nicknameTheme.secondary}
       >
+        <div className="profile-preview__toolbar">
+          <span className="profile-preview__eyebrow">Visualização do perfil</span>
+          {isOwner ? (
+            <button
+              type="button"
+              className="profile-preview__edit-toggle"
+              onClick={() => setIsEditing((current) => !current)}
+              aria-pressed={isEditing}
+            >
+              {isEditing ? 'Ver perfil' : 'Editar perfil'}
+            </button>
+          ) : null}
+        </div>
         <ProfileHeader
           avatarUrl={profile.avatarUrl}
           avatarThumbUrl={profile.avatarThumbUrl}
           avatarFrameUrl={profile.avatarFrameUrl}
           bannerUrl={profile.bannerUrl}
           displayName={profile.displayName}
-          isOwner={isOwner}
+          isOwner={isOwner && isEditing}
           onUploadMedia={onUploadMedia}
         />
         <div className="profile-shell__content">
@@ -105,8 +119,8 @@ export function ProfileExperience({
               <div className="profile-page__about profile-mobile-card">
                 <ProfileAbout
                   bio={profile.bio}
-                  isOwner={isOwner}
-                  onSave={isOwner ? onSaveBio : undefined}
+                  isOwner={isOwner && isEditing}
+                  onSave={isOwner && isEditing ? onSaveBio : undefined}
                 />
                 <ProfileMeta
                   createdAt={profile.createdAt}
@@ -115,12 +129,12 @@ export function ProfileExperience({
                 />
               </div>
             </div>
-            <ProfileLinks links={profile.externalLinks} isOwner={isOwner} onSave={onSaveLinks} />
+            <ProfileLinks links={profile.externalLinks} isOwner={isOwner && isEditing} onSave={onSaveLinks} />
             <ProfileHighlight highlight={highlight} />
           </div>
         </div>
       </ProfileShell>
-      {isOwner ? (
+      {isOwner && isEditing ? (
         <ProfileCustomizer
           displayName={profile.displayName}
           profileTheme={profileTheme}

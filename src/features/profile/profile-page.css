@@ -8,6 +8,67 @@
   justify-content: start;
 }
 
+.profile-preview__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) clamp(var(--space-4), 4vw, 40px) var(--space-2);
+  color: var(--profile-muted);
+}
+
+.profile-preview__eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.profile-preview__edit-toggle {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--profile-foreground) 18%, transparent);
+  border-radius: 999px;
+  background: var(--profile-secondary-glass);
+  color: var(--profile-foreground);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.profile-preview__edit-toggle:hover,
+.profile-preview__edit-toggle:focus-visible {
+  background: var(--profile-color-secondary);
+}
+
+.profile-preview__edit-toggle:focus-visible { outline: 3px solid var(--profile-color-secondary); outline-offset: 2px; }
+
+.profile-page-experience:not(.profile-page-experience--editing) .profile-shell__main-grid {
+  max-width: none;
+  grid-template-columns: minmax(0, 1.25fr) minmax(230px, 0.75fr);
+  gap: clamp(var(--space-5), 4vw, 40px);
+}
+
+.profile-page-experience:not(.profile-page-experience--editing) .profile-shell__identity-region,
+.profile-page-experience:not(.profile-page-experience--editing) .profile-connections {
+  padding: clamp(var(--space-4), 3vw, 28px);
+  border: 1px solid color-mix(in srgb, var(--profile-foreground) 12%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--profile-secondary-surface) 68%, transparent);
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--profile-foreground) 8%, transparent);
+}
+
+.profile-page-experience:not(.profile-page-experience--editing) .profile-page__about {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid color-mix(in srgb, var(--profile-foreground) 12%, transparent);
+}
+
+.profile-page-experience:not(.profile-page-experience--editing) .profile-connections {
+  height: fit-content;
+}
+
 .profile-page__about [role='button'] {
   border: 0 !important;
   background: transparent !important;
@@ -55,5 +116,18 @@
     margin-top: var(--space-5);
     padding-top: var(--space-4);
     border-top: 1px solid color-mix(in srgb, var(--profile-foreground) 10%, transparent);
+  }
+
+  .profile-preview__toolbar { padding-inline: var(--space-4); }
+
+  .profile-page-experience:not(.profile-page-experience--editing) .profile-shell__main-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .profile-page-experience:not(.profile-page-experience--editing) .profile-shell__identity-region,
+  .profile-page-experience:not(.profile-page-experience--editing) .profile-connections {
+    padding: var(--space-4);
+    border-radius: 16px;
   }
 }
