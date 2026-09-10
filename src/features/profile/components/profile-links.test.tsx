@@ -20,9 +20,8 @@ describe('ProfileLinks', () => {
     expect(screen.queryByRole('link', { name: /Legado/ })).toBeNull();
   });
 
-  it('mantém URLs longas contidas e expõe descrição e ação acessíveis', () => {
+  it('mantém URLs longas contidas e expõe a ação de edição acessível', () => {
     render(<ProfileLinks links={[{ label: 'Projeto', url: `https://example.com/${'segmento-'.repeat(70)}` }]} isOwner onSave={vi.fn()} />);
-    expect(screen.getByText('Partilhe os seus projetos e outros lugares onde as pessoas podem encontrar você.')).toBeDefined();
     expect(screen.getByRole('link', { name: /Projeto/ })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Editar links' })).toBeDefined();
     expect(document.querySelector('.profile-connections__list li')).not.toBeNull();
@@ -97,8 +96,35 @@ describe('ProfileLinks', () => {
     render(<ProfileLinks links={links.slice(0, 1)} isOwner onSave={onSave} />);
     fireEvent.click(screen.getByRole('button', { name: 'Editar links' }));
     fireEvent.click(screen.getByRole('button', { name: 'Salvar links' }));
-    await vi.waitFor(() => expect(screen.getByRole('status').textContent).toContain('Links salvos'));
-    act(() => vi.advanceTimersByTime(5000));
+    await vi.waitFor(() => expect(screen.getByRole('status').textContent).toContain('Link salvo'));
+    act(() => vi.advanceTimersByTime(3000));
+    fireEvent.click(screen.getByRole('button', { name: 'Editar links' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar links' }));
+    await vi.waitFor(() => expect(onSave).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(screen.getByRole('status').textContent).toContain('Link salvo'));
+    act(() => vi.advanceTimersByTime(2000));
+    expect(screen.getByRole('status').textContent).toContain('Link salvo');
+    act(() => vi.advanceTimersByTime(3000));
     expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('limpa o timer do feedback ao desmontar e mantém erros fora do aria-live de sucesso', async () => {
+    vi.useFakeTimers();
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
+    const onSave = vi.fn().mockRejectedValueOnce(new Error('falha')).mockResolvedValue(undefined);
+    const { unmount } = render(
+      <ProfileLinks links={links.slice(0, 1)} isOwner onSave={onSave} />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar links' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar links' }));
+    await vi.waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Não foi possível'));
+    expect(screen.queryByRole('status')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar links' }));
+    await vi.waitFor(() => expect(screen.getByRole('status').textContent).toContain('Link salvo'));
+    unmount();
+    expect(clearTimeoutSpy).toHaveBeenCalled();
+    clearTimeoutSpy.mockRestore();
   });
 });

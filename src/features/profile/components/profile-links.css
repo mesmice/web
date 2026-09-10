@@ -24,4 +24,35 @@
 .profile-connections__list { gap: var(--space-5); }
 .profile-connections__list li { min-width: 0; }
 .profile-links__remove:hover:not(:disabled) { color: var(--color-danger); }
+
+.profile-customizer__connections .profile-links__editor,
+.profile-customizer__connections .profile-links__fields {
+  gap: 24px;
+}
+
+.profile-customizer__connections .profile-links__field-group {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 24px;
+}
+
+.profile-customizer__connections .profile-links__field-heading {
+  margin-bottom: 4px;
+}
+
+.profile-customizer__connections .profile-links__field-group label,
+.profile-customizer__connections .profile-links__field-group .input,
+.profile-customizer__connections .profile-links__field-error {
+  margin-top: 0;
+}
+
+.profile-customizer__connections .profile-links__editor > .btn {
+  justify-self: center;
+}
+
+.profile-customizer__connections .profile-links__editor-actions {
+  gap: 12px;
+  padding-top: 4px;
+}
+
 @media (max-width: 520px) { .profile-links__editor-actions { display: grid; grid-template-columns: 1fr 1fr; } .profile-links__editor-actions .btn { width: 100%; } }

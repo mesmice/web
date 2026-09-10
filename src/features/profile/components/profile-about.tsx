@@ -43,10 +43,7 @@ function renderInline(text: string, keyPrefix: string) {
 
       if (/^@[a-zA-Z0-9_.]+$/.test(part)) {
         return (
-          <span
-            key={key}
-            className="rounded-sm bg-(--color-action-secondary) px-1 py-px font-medium text-(--color-brand-deep-purple)"
-          >
+          <span key={key} className="font-medium text-(--color-brand-primary)">
             {part}
           </span>
         );
@@ -92,19 +89,23 @@ export function ProfileAbout({ bio, isOwner, onSave }: ProfileAboutProps) {
   const [draft, setDraft] = useState(initialBio);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [successFeedback, setSuccessFeedback] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const editRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => () => {
-    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    },
+    []
+  );
 
   const showSuccessFeedback = () => {
     if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
-    setFeedback('Bio salva com sucesso.');
+    setSuccessFeedback('Bio salva com sucesso.');
     feedbackTimerRef.current = setTimeout(() => {
-      setFeedback(null);
+      setSuccessFeedback(null);
       feedbackTimerRef.current = null;
     }, 5000);
   };
@@ -125,14 +126,16 @@ export function ProfileAbout({ bio, isOwner, onSave }: ProfileAboutProps) {
 
   const startEditing = () => {
     setDraft(normalizedBio);
-    setFeedback(null);
+    setSuccessFeedback(null);
+    setSaveError(null);
     setIsEditing(true);
   };
 
   const cancelEditing = () => {
     setDraft(normalizedBio);
     setIsEditing(false);
-    setFeedback(null);
+    setSuccessFeedback(null);
+    setSaveError(null);
   };
 
   const handleSave = async () => {
@@ -143,14 +146,15 @@ export function ProfileAbout({ bio, isOwner, onSave }: ProfileAboutProps) {
     }
 
     setIsSaving(true);
-    setFeedback(null);
+    setSuccessFeedback(null);
+    setSaveError(null);
 
     try {
       await onSave(nextBio || null);
       setIsEditing(false);
       showSuccessFeedback();
     } catch {
-      setFeedback('Não foi possível salvar a bio.');
+      setSaveError('Não foi possível salvar a bio.');
     } finally {
       setIsSaving(false);
     }
@@ -158,9 +162,7 @@ export function ProfileAbout({ bio, isOwner, onSave }: ProfileAboutProps) {
 
   return (
     <div className="profile-subsection profile-about">
-      <h2 className="profile-section__title">
-        Sobre
-      </h2>
+      <h2 className="profile-section__title">Sobre</h2>
 
       {isEditing ? (
         <div className="space-y-2">
@@ -204,6 +206,11 @@ export function ProfileAbout({ bio, isOwner, onSave }: ProfileAboutProps) {
               </Button>
             </div>
           </div>
+          {saveError ? (
+            <p className="profile-feedback profile-feedback--error" role="alert">
+              {saveError}
+            </p>
+          ) : null}
         </div>
       ) : (
         <>
@@ -260,7 +267,15 @@ export function ProfileAbout({ bio, isOwner, onSave }: ProfileAboutProps) {
             )}
           </div>
 
-          {feedback && <p className="profile-feedback profile-feedback--success" role="status" aria-live="polite">{feedback}</p>}
+          {successFeedback && (
+            <p
+              className="profile-feedback profile-feedback--success"
+              role="status"
+              aria-live="polite"
+            >
+              {successFeedback}
+            </p>
+          )}
         </>
       )}
     </div>

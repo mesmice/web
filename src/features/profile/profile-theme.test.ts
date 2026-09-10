@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { getReadableProfileColors } from './profile-theme.js';
+import { getReadableProfileColors, isHexColor, normalizeHexColor } from './profile-theme.js';
 
 describe('getReadableProfileColors', () => {
+  it('aceita hexadecimal com ou sem # e normaliza para o formato persistido', () => {
+    expect(isHexColor('#8b5cf6')).toBe(true);
+    expect(isHexColor('8b5cf6')).toBe(true);
+    expect(isHexColor('#XYZXYZ')).toBe(false);
+    expect(normalizeHexColor(' 8b5cf6 ')).toBe('#8B5CF6');
+  });
+
   it.each([
     ['#FFFFFF', '#201A2C'],
     ['#000000', '#FFFFFF'],
