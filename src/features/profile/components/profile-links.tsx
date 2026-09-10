@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, Camera, ExternalLink as ExternalLinkIcon, GitFork, Globe, Music2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Button } from '../../../components/ui/button.js';
 import { Input } from '../../../components/ui/input.js';
@@ -34,6 +34,20 @@ export function ProfileLinks({ links, isOwner = false, onSave }: ProfileLinksPro
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+  }, []);
+
+  const showSuccessFeedback = () => {
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    setSaveSuccess(true);
+    feedbackTimerRef.current = setTimeout(() => {
+      setSaveSuccess(false);
+      feedbackTimerRef.current = null;
+    }, 5000);
+  };
 
   if (links.length === 0 && (!isOwner || !onSave)) return null;
 
@@ -58,7 +72,7 @@ export function ProfileLinks({ links, isOwner = false, onSave }: ProfileLinksPro
     setIsSaving(true); setSaveError(null); setSaveSuccess(false);
     try {
       await onSave?.(normalizeExternalLinks(draft.map(({ label, url }) => ({ label, url }))));
-      setSaveSuccess(true);
+      showSuccessFeedback();
       setIsEditing(false);
     } catch {
       setSaveError('Não foi possível salvar os links. Tente novamente.');
@@ -71,7 +85,7 @@ export function ProfileLinks({ links, isOwner = false, onSave }: ProfileLinksPro
         <h2 id="profile-links-title">Conexões</h2>
         {isOwner && !isEditing && links.length ? <button className="profile-links__icon-button" type="button" onClick={startEditing} aria-label="Editar links"><Pencil size={16} aria-hidden="true" /></button> : null}
       </div>
-      <p className="profile-links__description">Partilhe os seus projetos e outros lugares onde as pessoas podem encontrar você.</p>
+      <p className="profile-section__description">Partilhe os seus projetos e outros lugares onde as pessoas podem encontrar você.</p>
       {isEditing ? (
         <div className="profile-links__editor">
           <ol className="profile-links__fields" aria-label="Links em edição">
@@ -94,11 +108,11 @@ export function ProfileLinks({ links, isOwner = false, onSave }: ProfileLinksPro
           </ol>
           {draft.length < PROFILE_LINKS_LIMIT ? <Button type="button" variant="ghost" onClick={() => setDraft((current) => [...current, makeEditable()])} disabled={isSaving}><Plus size={16} aria-hidden="true" /> Adicionar outro link</Button> : <p className="profile-links__limit">Limite de 5 links atingido.</p>}
           {saveError ? <p className="profile-links__save-error" role="alert">{saveError}</p> : null}
-          {saveSuccess ? <p className="profile-links__save-success" role="status">Links salvos com sucesso.</p> : null}
+          {saveSuccess ? <p className="profile-feedback profile-feedback--success" role="status" aria-live="polite">Links salvos com sucesso.</p> : null}
           <div className="profile-links__editor-actions"><Button type="button" variant="ghost" onClick={cancelEditing} disabled={isSaving}>Cancelar</Button><Button type="button" onClick={() => void save()} disabled={isSaving}>{isSaving ? 'Salvando…' : 'Salvar links'}</Button></div>
         </div>
       ) : <>
-        {saveSuccess ? <p className="profile-links__save-success" role="status">Links salvos com sucesso.</p> : null}
+        {saveSuccess ? <p className="profile-feedback profile-feedback--success" role="status" aria-live="polite">Links salvos com sucesso.</p> : null}
         {links.length ? <LinksList links={links} /> : <div className="profile-links__empty"><p>Adicione links para seus projetos e redes.</p><Button type="button" variant="secondary" onClick={startEditing}><Plus size={16} aria-hidden="true" /> Adicionar link</Button></div>}
       </>}
     </section>

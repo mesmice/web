@@ -93,7 +93,21 @@ export function ProfileAbout({ bio, isOwner, onSave }: ProfileAboutProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const editRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => () => {
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+  }, []);
+
+  const showSuccessFeedback = () => {
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    setFeedback('Bio salva com sucesso.');
+    feedbackTimerRef.current = setTimeout(() => {
+      setFeedback(null);
+      feedbackTimerRef.current = null;
+    }, 5000);
+  };
 
   const normalizedBio = useMemo(() => initialBio, [initialBio]);
   const blocks = useMemo(() => parseBioBlocks(normalizedBio), [normalizedBio]);
@@ -134,7 +148,7 @@ export function ProfileAbout({ bio, isOwner, onSave }: ProfileAboutProps) {
     try {
       await onSave(nextBio || null);
       setIsEditing(false);
-      setFeedback('Bio salva com sucesso.');
+      showSuccessFeedback();
     } catch {
       setFeedback('Não foi possível salvar a bio.');
     } finally {
@@ -143,8 +157,8 @@ export function ProfileAbout({ bio, isOwner, onSave }: ProfileAboutProps) {
   };
 
   return (
-    <div className="mt-3 w-full">
-      <h2 className="mb-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-(--color-text-muted)]">
+    <div className="profile-subsection profile-about">
+      <h2 className="profile-section__title">
         Sobre
       </h2>
 
@@ -246,7 +260,7 @@ export function ProfileAbout({ bio, isOwner, onSave }: ProfileAboutProps) {
             )}
           </div>
 
-          {feedback && <p className="mt-2 text-xs text-(--color-success)">{feedback}</p>}
+          {feedback && <p className="profile-feedback profile-feedback--success" role="status" aria-live="polite">{feedback}</p>}
         </>
       )}
     </div>

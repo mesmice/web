@@ -27,7 +27,8 @@ describe('ProfileMeta', () => {
     );
 
     expect(screen.getByText('128 amigos')).toBeDefined();
-    expect(screen.getByText('Membro desde janeiro de 2026')).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'Membro desde' })).toBeDefined();
+    expect(screen.getByText('janeiro de 2026')).toBeDefined();
     expect(container.querySelector('svg')).toBeNull();
   });
 });

@@ -1,8 +1,8 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ProfileLinks } from './profile-links.js';
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.useRealTimers(); });
 const links = [{ label: 'GitHub', url: 'https://github.com/mesmice' }, { label: 'Meu site', url: 'https://example.com' }];
 
 describe('ProfileLinks', () => {
@@ -89,5 +89,16 @@ describe('ProfileLinks', () => {
     expect((screen.getByLabelText('Nome') as HTMLInputElement).value).toBe('GitHub editado');
     fireEvent.click(screen.getByRole('button', { name: 'Salvar links' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2));
+  });
+
+  it('mostra feedback acessível de link e remove-o após cinco segundos', async () => {
+    vi.useFakeTimers();
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<ProfileLinks links={links.slice(0, 1)} isOwner onSave={onSave} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Editar links' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar links' }));
+    await vi.waitFor(() => expect(screen.getByRole('status').textContent).toContain('Links salvos'));
+    act(() => vi.advanceTimersByTime(5000));
+    expect(screen.queryByRole('status')).toBeNull();
   });
 });

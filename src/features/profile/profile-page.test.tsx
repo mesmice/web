@@ -29,7 +29,8 @@ describe('ProfilePage', () => {
     expect(screen.getByText(PROFILE_DEMO.bio!)).toBeDefined();
     expect(screen.getByRole('heading', { name: 'Conexões' })).toBeDefined();
     expect(screen.getByRole('link', { name: /Site pessoal/ })).toBeDefined();
-    expect(screen.getByText('Membro desde janeiro de 2026')).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'Membro desde' })).toBeDefined();
+    expect(screen.getByText('janeiro de 2026')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Editar perfil' })).toBeDefined();
     expect(screen.queryByRole('button', { name: 'Alterar banner' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Alterar avatar' })).toBeNull();
@@ -37,7 +38,7 @@ describe('ProfilePage', () => {
     expect(screen.queryByRole('status', { name: 'Carregando perfil' })).toBeNull();
     expect(document.querySelector('.profile-meta__count')).toBeNull();
 
-    const memberSince = screen.getByText('Membro desde janeiro de 2026');
+    const memberSince = screen.getByRole('heading', { name: 'Membro desde' });
     const connectionsTitle = screen.getByRole('heading', { name: 'Conexões' });
     expect(memberSince.compareDocumentPosition(connectionsTitle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
