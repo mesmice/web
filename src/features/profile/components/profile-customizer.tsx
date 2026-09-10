@@ -152,6 +152,9 @@ export function ProfileCustomizer({
   return (
     <aside className="profile-customizer" aria-labelledby="profile-customizer-title">
       <h2 id="profile-customizer-title">Personalizar perfil</h2>
+      <p className="profile-customizer__notice" role="note">
+        As alterações abaixo são apenas uma pré-visualização local nesta etapa.
+      </p>
 
       <section className="profile-customizer__section" aria-labelledby="profile-theme-title">
         <h3 id="profile-theme-title">Tema do perfil</h3>

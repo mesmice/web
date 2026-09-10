@@ -9,10 +9,7 @@ import { ProfilePage } from '../features/profile/profile-page.js';
 import { SpacesPage } from '../features/spaces/pages/spaces-page.js';
 
 export function createProfileRoute(isDevelopment: boolean): RouteObject {
-  if (isDevelopment) {
-    return { path: 'profile', element: <ProfilePage /> };
-  }
-
+  void isDevelopment;
   return {
     element: <RequireAuth />,
     children: [{ path: 'profile', element: <ProfilePage /> }]

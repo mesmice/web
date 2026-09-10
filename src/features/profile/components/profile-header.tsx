@@ -8,6 +8,7 @@ import { ProfileMediaEditor } from '../media/profile-media-editor.js';
 import './profile-header.css';
 
 type ProfileHeaderProps = Pick<PrivateUser, 'avatarUrl' | 'avatarThumbUrl' | 'bannerUrl' | 'displayName'> & {
+  avatarFrameUrl?: PrivateUser['avatarFrameUrl'];
   isOwner?: boolean;
   onUploadMedia?: (kind: ProfileMediaKind, media: ProcessedProfileMedia) => Promise<void>;
 };
@@ -19,6 +20,7 @@ function getAvatarFallback(displayName: string): string {
 export function ProfileHeader({
   avatarUrl,
   avatarThumbUrl,
+  avatarFrameUrl,
   bannerUrl,
   displayName,
   isOwner = false,
@@ -78,6 +80,14 @@ export function ProfileHeader({
         ) : (
           <span aria-label={`Avatar de ${displayName}`}>{getAvatarFallback(displayName)}</span>
         )}
+        {avatarFrameUrl ? (
+          <img
+            src={avatarFrameUrl}
+            alt=""
+            aria-hidden="true"
+            className="profile-header__avatar-frame"
+          />
+        ) : null}
         {canEdit ? (
           <Button
             type="button"

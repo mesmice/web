@@ -31,11 +31,11 @@ beforeEach(() => {
 });
 
 describe('rota /profile', () => {
-  it('permite que visitante anônimo visualize o perfil de demonstração em DEV', () => {
+  it('mantém o perfil protegido também em DEV', () => {
     renderProfileRoute(true);
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Maria Souza' })).toBeDefined();
-    expect(screen.queryByRole('heading', { name: 'Login' })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Login' })).toBeDefined();
+    expect(screen.queryByRole('heading', { level: 1, name: 'Maria Souza' })).toBeNull();
   });
 
   it('mantém o perfil protegido para visitante anônimo em produção', () => {
@@ -50,5 +50,7 @@ describe('rota /profile', () => {
     renderProfileRoute(false);
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Maria Souza' })).toBeDefined();
+    expect(screen.queryByText('Construindo comunidades com cuidado e criando espaços para boas conversas.')).toBeNull();
+    expect(screen.getByText('Nenhuma bio adicionada.')).toBeDefined();
   });
 });

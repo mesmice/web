@@ -10,12 +10,6 @@ import { ProfileLinks } from './components/profile-links.js';
 import { ProfileMeta } from './components/profile-meta.js';
 import { ProfileError, ProfileLoading } from './components/profile-query-state.js';
 import { ProfileShell } from './components/profile-shell.js';
-import {
-  PROFILE_DEMO_FRIENDS_COUNT,
-  PROFILE_DEMO_HIGHLIGHT,
-  PROFILE_DEMO_TAGLINE,
-  PROFILE_DEMO
-} from './profile-demo-data.js';
 import { useMyProfile } from './queries/use-my-profile.js';
 import { useUpdateProfile } from './queries/use-update-profile.js';
 import { useUploadProfileMedia } from './queries/use-upload-profile-media.js';
@@ -30,7 +24,7 @@ import {
   type ProfileThemeColors
 } from './profile-theme.js';
 
-interface ProfileExperienceProps {
+export interface ProfileExperienceProps {
   profile: PrivateUser;
   isOwner?: boolean;
   onSaveBio?: (bio: string | null) => Promise<void>;
@@ -91,6 +85,7 @@ export function ProfileExperience({
         <ProfileHeader
           avatarUrl={profile.avatarUrl}
           avatarThumbUrl={profile.avatarThumbUrl}
+          avatarFrameUrl={profile.avatarFrameUrl}
           bannerUrl={profile.bannerUrl}
           displayName={profile.displayName}
           isOwner={isOwner}
@@ -170,14 +165,5 @@ function AuthenticatedProfilePage() {
 export function ProfilePage() {
   const isAuthenticated = useAuthStore((state) => state.status === 'authenticated');
 
-  return isAuthenticated ? (
-    <AuthenticatedProfilePage />
-  ) : (
-    <ProfileExperience
-      profile={PROFILE_DEMO}
-      friendsCount={PROFILE_DEMO_FRIENDS_COUNT}
-      tagline={PROFILE_DEMO_TAGLINE}
-      highlight={PROFILE_DEMO_HIGHLIGHT}
-    />
-  );
+  return isAuthenticated ? <AuthenticatedProfilePage /> : null;
 }
