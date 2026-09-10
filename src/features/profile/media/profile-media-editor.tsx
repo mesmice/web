@@ -1,8 +1,10 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { ImagePlus, RotateCcw, X } from 'lucide-react';
 import { Button } from '../../../components/ui/button.js';
 import {
   PROFILE_MEDIA_ACCEPT,
+  PROFILE_MEDIA_MAX_BYTES,
   getTransformedDimensions,
   processProfileMedia,
   validateProfileMediaFile,
@@ -12,6 +14,10 @@ import {
   type ProfileMediaMimeType,
   type QuarterTurn
 } from './image-processing.js';
+import {
+  getProfileMediaErrorMessage
+} from '../api/profile-media-endpoints.js';
+import { ApiRequestError } from '../../../lib/api/client.js';
 import './profile-media-editor.css';
 
 interface ProfileMediaEditorLabels {
@@ -38,7 +44,7 @@ export interface ProfileMediaEditorProps {
   viewportShape?: 'rectangle' | 'circle';
   labels?: ProfileMediaEditorLabels;
   onCancel: () => void;
-  onConfirm: (result: ProcessedProfileMedia) => void;
+  onConfirm: (result: ProcessedProfileMedia) => void | Promise<void>;
 }
 
 const DEFAULT_LABELS = {
@@ -94,16 +100,16 @@ export function ProfileMediaEditor({
   const dialogRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const cropViewportRef = useRef<HTMLDivElement>(null);
   const previewUrlRef = useRef(previewUrl);
   const dragRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   const titleId = useId();
   const descriptionId = useId();
   const errorId = useId();
-  const gifHelpId = useId();
 
   useEffect(() => {
     const handleResize = () => {
-      const viewport = viewportRef.current?.getBoundingClientRect();
+      const viewport = cropViewportRef.current?.getBoundingClientRect();
       if (viewport?.width && viewport.height) {
         setViewportSize({ width: viewport.width, height: viewport.height });
       }
@@ -223,7 +229,7 @@ export function ProfileMediaEditor({
   }
 
   function movePosition(deltaX: number, deltaY: number) {
-    const viewport = viewportRef.current?.getBoundingClientRect();
+    const viewport = cropViewportRef.current?.getBoundingClientRect();
     if (!viewport || !transformedDimensions) return;
     const scale =
       Math.max(
@@ -284,9 +290,17 @@ export function ProfileMediaEditor({
         mimeType: outputMimeType,
         quality
       });
-      onConfirm(result);
-    } catch {
-      setError('Não foi possível processar a imagem. Tente selecionar outro arquivo.');
+      if (result.blob.size > PROFILE_MEDIA_MAX_BYTES) {
+        throw new Error('A imagem processada excede o limite de 4 MiB.');
+      }
+      await onConfirm(result);
+    } catch (cause) {
+      setError(
+        cause instanceof ApiRequestError ||
+          (cause instanceof Error && cause.message === 'A imagem processada excede o limite de 4 MiB.')
+          ? getProfileMediaErrorMessage(cause)
+          : 'Não foi possível processar a imagem. Tente selecionar outro arquivo.'
+      );
     } finally {
       setProcessing(false);
     }
@@ -303,13 +317,18 @@ export function ProfileMediaEditor({
         aria-describedby={descriptionId}
         onKeyDown={handleDialogKeyDown}
       >
-        <header>
+        <header className="profile-media-editor__header">
+          <div>
           <h2 id={titleId} className="profile-media-editor__title">
             {labels.title}
           </h2>
           <p id={descriptionId} className="profile-media-editor__description">
             {labels.description}
           </p>
+          </div>
+          <Button type="button" variant="ghost" aria-label="Fechar editor" onClick={cancel} disabled={processing}>
+            <X size={18} aria-hidden="true" />
+          </Button>
         </header>
 
         {previewUrl ? (
@@ -325,19 +344,22 @@ export function ProfileMediaEditor({
         ) : (
           <section className="profile-media-editor__selector" aria-label="Selecione uma mídia">
             <h3>Selecione uma mídia</h3>
-            <label className="profile-media-editor__file-control profile-media-editor__file-control--primary">
-              <span>{labels.select}</span>
-              <input
-                type="file"
-                accept={PROFILE_MEDIA_ACCEPT}
-                aria-describedby={error ? errorId : undefined}
-                onChange={(event) => handleFile(event.target.files?.[0] ?? null)}
-              />
-            </label>
-            <Button type="button" variant="secondary" disabled aria-describedby={gifHelpId}>
-              Enviar GIF
-            </Button>
-            <p id={gifHelpId}>GIF animado ainda não pode ser editado sem perder a animação.</p>
+            <div className="profile-media-editor__media-options">
+              <label className="profile-media-editor__media-option profile-media-editor__media-option--primary">
+                <ImagePlus size={20} aria-hidden="true" />
+                <span>{labels.select}</span>
+                <small>PNG, JPEG ou WebP</small>
+                <input
+                  type="file"
+                  accept={PROFILE_MEDIA_ACCEPT}
+                  aria-describedby={error ? errorId : undefined}
+                  onChange={(event) => handleFile(event.target.files?.[0] ?? null)}
+                />
+              </label>
+            </div>
+            <p className="profile-media-editor__selector-hint">
+              Escolha uma imagem para ajustar o recorte antes do envio.
+            </p>
           </section>
         )}
 
@@ -345,14 +367,16 @@ export function ProfileMediaEditor({
           <>
             <div
               ref={viewportRef}
-              className={`profile-media-editor__viewport profile-media-editor__viewport--${viewportShape}`}
-              style={{
-                aspectRatio,
-                maxWidth: `min(100%, calc(min(50dvh, 440px) * ${aspectRatio}))`
-              }}
-              tabIndex={0}
-              role="group"
-              aria-label="Área de recorte. Use as setas para reposicionar a imagem."
+              className="profile-media-editor__canvas"
+              style={{ aspectRatio: viewportShape === 'circle' ? '4 / 3' : '16 / 10' }}
+            >
+              <div
+                ref={cropViewportRef}
+                className={`profile-media-editor__crop-window profile-media-editor__crop-window--${viewportShape}`}
+                style={{ aspectRatio, width: viewportShape === 'circle' ? '66%' : '92%' }}
+                tabIndex={0}
+                role="group"
+                aria-label="Área de recorte. Use as setas para reposicionar a imagem."
               onKeyDown={handleViewportKeyDown}
               onPointerDown={(event) => {
                 event.currentTarget.setPointerCapture(event.pointerId);
@@ -377,8 +401,17 @@ export function ProfileMediaEditor({
               }}
               onPointerCancel={() => (dragRef.current = null)}
             >
-              <div className="profile-media-editor__stage" style={previewLayout?.stage}>
+              <div className="profile-media-editor__stage profile-media-editor__stage--background" style={previewLayout?.stage} aria-hidden="true">
                 <img
+                  src={previewUrl}
+                  alt=""
+                  draggable={false}
+                  style={previewLayout?.image}
+                />
+              </div>
+              <div className="profile-media-editor__active-clip">
+                <div className="profile-media-editor__stage" style={previewLayout?.stage}>
+                  <img
                   src={previewUrl}
                   alt={labels.previewAlt}
                   draggable={false}
@@ -390,14 +423,16 @@ export function ProfileMediaEditor({
                       return;
                     }
                     setDimensions({ width: image.naturalWidth, height: image.naturalHeight });
-                    const viewport = viewportRef.current?.getBoundingClientRect();
+                    const viewport = cropViewportRef.current?.getBoundingClientRect();
                     if (viewport?.width && viewport.height) {
                       setViewportSize({ width: viewport.width, height: viewport.height });
                     }
                   }}
                   onError={() => setError('Não foi possível decodificar a imagem selecionada.')}
-                />
+                  />
+                </div>
               </div>
+            </div>
             </div>
 
             <div className="profile-media-editor__toolbar" aria-label="Ferramentas da imagem">
@@ -425,6 +460,7 @@ export function ProfileMediaEditor({
                   aria-label={labels.rotate}
                   onClick={rotate}
                 >
+                  <RotateCcw size={15} aria-hidden="true" />
                   Girar
                 </Button>
                 <Button

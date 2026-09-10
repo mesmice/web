@@ -54,22 +54,21 @@ function loadPreview() {
 }
 
 describe('ProfileMediaEditor', () => {
-  it('oferece seleção estática e mantém GIF explicitamente indisponível', () => {
+  it('oferece uma seleção estática simples sem apresentar GIF não suportado', () => {
     render(<ProfileMediaEditor aspectRatio={1} onCancel={vi.fn()} onConfirm={vi.fn()} />);
-    expect((screen.getByLabelText('Enviar imagem') as HTMLInputElement).accept).toBe(
+    expect(document.querySelector<HTMLInputElement>('.profile-media-editor__media-option input')).not.toBeNull();
+    expect(document.querySelector<HTMLInputElement>('.profile-media-editor__media-option input')?.accept).toBe(
       'image/png,image/jpeg,image/webp'
     );
-    expect((screen.getByRole('button', { name: 'Enviar GIF' }) as HTMLButtonElement).disabled).toBe(
-      true
-    );
-    expect(screen.getByText(/GIF animado ainda não pode ser editado/)).toBeDefined();
+    expect(screen.getByText('Enviar imagem')).toBeDefined();
+    expect(screen.queryByText('Enviar GIF')).toBeNull();
   });
 
   it('cria preview, permite substituir e revoga cada Object URL', () => {
     const { unmount } = render(
       <ProfileMediaEditor aspectRatio={1} onCancel={vi.fn()} onConfirm={vi.fn()} />
     );
-    const input = screen.getByLabelText('Enviar imagem');
+    const input = document.querySelector<HTMLInputElement>('.profile-media-editor__media-option input')!;
     fireEvent.change(input, {
       target: { files: [new File(['a'], 'a.png', { type: 'image/png' })] }
     });
@@ -85,7 +84,7 @@ describe('ProfileMediaEditor', () => {
 
   it('mostra erros locais de tipo e tamanho', () => {
     render(<ProfileMediaEditor aspectRatio={1} onCancel={vi.fn()} onConfirm={vi.fn()} />);
-    const input = screen.getByLabelText('Enviar imagem');
+    const input = document.querySelector<HTMLInputElement>('.profile-media-editor__media-option input')!;
     fireEvent.change(input, {
       target: { files: [new File(['x'], 'x.gif', { type: 'image/gif' })] }
     });
@@ -130,6 +129,46 @@ describe('ProfileMediaEditor', () => {
     const viewport = screen.getByRole('group', { name: /Área de recorte/ });
     fireEvent.keyDown(viewport, { key: 'ArrowRight' });
     expect(viewport).toBeTruthy();
+  });
+
+  it('mantém uma única edição com imagem completa, máscara e duas camadas alinhadas', () => {
+    render(
+      <ProfileMediaEditor
+        file={new File(['a'], 'a.png', { type: 'image/png' })}
+        aspectRatio={1}
+        viewportShape="circle"
+        onCancel={vi.fn()}
+        onConfirm={vi.fn()}
+      />
+    );
+    loadPreview();
+    expect(document.querySelector('.profile-media-editor__canvas')).not.toBeNull();
+    expect(document.querySelector('.profile-media-editor__crop-window--circle')).not.toBeNull();
+    expect(screen.queryByRole('tab', { name: 'Ajustar' })).toBeNull();
+    expect(screen.queryByRole('tab', { name: 'Pré-visualizar' })).toBeNull();
+    expect(screen.getByAltText('Prévia da imagem selecionada')).toBeDefined();
+    expect(document.querySelector('.profile-media-editor__stage--background img')).not.toBeNull();
+    expect(document.querySelector('.profile-media-editor__active-clip')).not.toBeNull();
+    expect(
+      document.querySelector<HTMLElement>('.profile-media-editor__stage--background')?.getAttribute('style')
+    ).toBe(document.querySelector<HTMLElement>('.profile-media-editor__active-clip .profile-media-editor__stage')?.getAttribute('style'));
+  });
+
+  it('usa máscara proporcional para banner e mantém a superfície neutra sem transparência quadriculada', () => {
+    render(
+      <ProfileMediaEditor
+        file={new File(['a'], 'a.png', { type: 'image/png' })}
+        aspectRatio={4}
+        viewportShape="rectangle"
+        onCancel={vi.fn()}
+        onConfirm={vi.fn()}
+      />
+    );
+    loadPreview();
+    expect(document.querySelector('.profile-media-editor__crop-window--rectangle')).not.toBeNull();
+    expect(document.querySelector('.profile-media-editor__stage--background img')).not.toBeNull();
+    expect(document.querySelector('.profile-media-editor__active-clip img')).not.toBeNull();
+    expect(document.querySelector('.profile-media-editor__canvas')?.className).not.toContain('checker');
   });
 
   it('aplica 90/180/270, flip e redefine todos os ajustes', () => {
