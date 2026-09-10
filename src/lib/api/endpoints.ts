@@ -24,15 +24,6 @@ export type FriendSummaryResponse = FriendSummary;
 export type FriendRequestResponse = FriendRequest;
 export type IncomingFriendRequestResponse = IncomingFriendRequest;
 
-export interface DirectMessageChannel {
-  id: string;
-  type: 'DM';
-  name: null;
-  participantIds: [string, string];
-  lastMessageAt: string | null;
-  unreadCount?: number;
-}
-
 export interface SpaceResponse {
   id: string;
   ownerId: string;
@@ -63,10 +54,6 @@ export interface SpaceListResponse {
 }
 export interface SpaceChannelListResponse {
   items: TextChannelResponse[];
-}
-
-export interface ConversationListResponse {
-  items: DirectMessageChannel[];
 }
 
 export interface MessageResponse {
@@ -196,19 +183,6 @@ export function removeFriend(friendId: string): Promise<void> {
 
 export function declineFriendRequest(requestId: string): Promise<void> {
   return apiFetch(`/friends/requests/${requestId}/decline`, { method: 'POST' });
-}
-
-export function getConversations(limit = 50): Promise<ConversationListResponse> {
-  return apiFetch(`/channels?limit=${limit}`);
-}
-
-export function createDirectMessage(
-  recipientId: string
-): Promise<{ channel: DirectMessageChannel }> {
-  return apiFetch('/channels', {
-    method: 'POST',
-    body: { type: 'DM', recipientId }
-  });
 }
 
 export function getMessages(

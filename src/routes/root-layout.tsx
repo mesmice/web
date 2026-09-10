@@ -10,6 +10,7 @@ import { SessionWatcher } from '../components/system/session-watcher.js';
 import { refreshSession } from '../lib/api/client.js';
 import { clearPersistedSession } from '../lib/auth/session-persistence.js';
 import { queryClient } from '../lib/query-client.js';
+import { ConversationRealtimeSync } from '../features/messages/realtime/conversation-realtime-sync.js';
 import './root-layout.css';
 
 const STATUS_LABEL = {
@@ -101,6 +102,7 @@ export function RootLayout() {
         <Outlet />
       </main>
       <SessionWatcher />
+      {authStatus === 'authenticated' && <ConversationRealtimeSync />}
     </div>
   );
 }
