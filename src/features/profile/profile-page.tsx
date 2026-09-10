@@ -15,6 +15,7 @@ import { useMyProfile } from './queries/use-my-profile.js';
 import { usePublicProfile } from './queries/use-public-profile.js';
 import { useUpdateProfile } from './queries/use-update-profile.js';
 import { useUploadProfileMedia } from './queries/use-upload-profile-media.js';
+import { checkUsernameAvailability } from './api/profile-endpoints.js';
 import type { ProfileMediaKind } from './api/profile-media-endpoints.js';
 import type { ProcessedProfileMedia } from './media/image-processing.js';
 import './profile-page.css';
@@ -29,6 +30,7 @@ import {
 export interface ProfileExperienceProps {
   profile: PublicUser;
   isOwner?: boolean;
+  onSaveIdentity?: (patch: { displayName?: string; username?: string }) => Promise<void>;
   onSaveBio?: (bio: string | null) => Promise<void>;
   onSaveLinks?: (links: PublicUser['externalLinks']) => Promise<void>;
   onUploadMedia?: (kind: ProfileMediaKind, media: ProcessedProfileMedia) => Promise<void>;
@@ -40,6 +42,7 @@ export interface ProfileExperienceProps {
 export function ProfileExperience({
   profile,
   isOwner = false,
+  onSaveIdentity,
   onSaveBio,
   onSaveLinks,
   onUploadMedia,
@@ -100,6 +103,9 @@ export function ProfileExperience({
                 displayName={profile.displayName}
                 username={profile.username}
                 presence={profile.presence}
+                isOwner={isOwner}
+                onSave={isOwner ? onSaveIdentity : undefined}
+                onCheckUsername={isOwner ? checkUsernameAvailability : undefined}
               />
               {tagline ? <p className="profile-shell__tagline">“{tagline}”</p> : null}
               <div className="profile-page__about profile-mobile-card">
@@ -157,6 +163,9 @@ function AuthenticatedProfilePage() {
     <ProfileExperience
       profile={profileQuery.data}
       isOwner
+      onSaveIdentity={async (patch) => {
+        await updateProfile.mutateAsync(patch);
+      }}
       onSaveBio={async (bio) => {
         await updateProfile.mutateAsync({ bio });
       }}

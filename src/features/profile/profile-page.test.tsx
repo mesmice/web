@@ -26,7 +26,7 @@ describe('ProfilePage', () => {
     expect(screen.getByRole('heading', { name: 'Conexões' })).toBeDefined();
     expect(screen.getByRole('link', { name: /Site pessoal/ })).toBeDefined();
     expect(screen.getByText('Membro desde janeiro de 2026')).toBeDefined();
-    expect(screen.queryByRole('button', { name: 'Editar perfil' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Editar perfil' })).toBeDefined();
     expect(screen.queryByRole('button', { name: 'Tentar novamente' })).toBeNull();
     expect(screen.queryByRole('status', { name: 'Carregando perfil' })).toBeNull();
     expect(document.querySelector('.profile-meta__count')).toBeNull();
