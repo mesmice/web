@@ -1,4 +1,5 @@
-import type { PrivateUser, TokenPair } from './auth.js';
+import type { ComputedPresence, PrivateUser, PublicUser, TokenPair } from './auth.js';
+export type { ComputedPresence, PrivateUser, PublicUser, UserPresence } from './auth.js';
 
 export type ErrorCode =
   | 'VALIDATION_ERROR'
@@ -28,11 +29,7 @@ export interface ErrorEnvelope {
   };
 }
 
-export type PresenceStatus = 'online' | 'idle' | 'dnd' | 'invisible' | 'offline';
-
-export type PublicUser = Omit<PrivateUser, 'email' | 'emailVerified' | 'presence'> & {
-  presence: PresenceStatus;
-};
+export type PresenceStatus = ComputedPresence;
 
 export interface UserSummary {
   id: string;
@@ -40,6 +37,38 @@ export interface UserSummary {
   displayName: string;
   avatarUrl: string | null;
   presence: PresenceStatus;
+}
+
+export interface CursorPageMeta {
+  nextCursor: string | null;
+}
+
+export interface CursorPage<T> {
+  items: T[];
+  meta: CursorPageMeta;
+}
+
+export interface FriendRequest {
+  id: string;
+  requesterId: string;
+  addresseeId: string;
+  createdAt: string;
+}
+
+export interface FriendSummary {
+  user: PublicUser;
+  since: string;
+}
+
+export interface IncomingFriendRequest {
+  request: FriendRequest;
+  requester: PublicUser;
+}
+
+export type FriendsResponse = CursorPage<FriendSummary>;
+
+export interface FriendRequestsResponse {
+  items: IncomingFriendRequest[];
 }
 
 export interface ReadinessReport {

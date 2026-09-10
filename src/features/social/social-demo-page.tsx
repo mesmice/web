@@ -15,6 +15,7 @@ import { FriendRequests } from './components/friend-requests.js';
 import { mapFriendRequestFromApi } from './components/friend-request-mapper.js';
 import { SocialNavigation, type SocialTab } from './components/social-navigation.js';
 import { ConversationPanel } from '../messages/components/conversation-panel.js';
+import { socialKeys } from './api/social-query-keys.js';
 
 function getErrorMessage(error: unknown) {
   return error && typeof error === 'object' && 'message' in error
@@ -47,11 +48,11 @@ export function SocialDemoPage() {
   const currentUserId = useAuthStore((state) => state.user?.id);
   const queryClient = useQueryClient();
   const friendsQuery = useQuery({
-    queryKey: ['friends'],
+    queryKey: socialKeys.friends(),
     queryFn: () => getFriends()
   });
   const requestsQuery = useQuery({
-    queryKey: ['friend-requests'],
+    queryKey: socialKeys.requests(),
     queryFn: getFriendRequests
   });
   const requestMutation = useMutation({
@@ -67,8 +68,8 @@ export function SocialDemoPage() {
     },
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['friends'] }),
-        queryClient.invalidateQueries({ queryKey: ['friend-requests'] })
+        queryClient.invalidateQueries({ queryKey: socialKeys.friends() }),
+        queryClient.invalidateQueries({ queryKey: socialKeys.requests() })
       ]);
     }
   });
