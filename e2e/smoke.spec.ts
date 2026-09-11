@@ -184,12 +184,16 @@ async function mockAuthenticatedProfile(page: Page) {
 test('owner edita links e a resposta canônica atualiza a visualização', async ({ page }) => {
   const request = await mockAuthenticatedProfile(page);
   await page.goto('/profile');
+  await page.getByRole('button', { name: 'Editar perfil' }).click();
   await page.getByRole('button', { name: 'Editar links' }).click();
   await page.getByLabel('Nome').fill('Portfólio');
   await page.getByLabel('URL').fill('https://portfolio.example.com');
   await page.getByRole('button', { name: 'Salvar links' }).click();
 
-  await expect(page.getByRole('link', { name: /Portfólio/ })).toBeVisible();
+  await expect(page.getByText('Link salvo com sucesso.')).toHaveAttribute('aria-live', 'polite');
+  await expect(
+    page.locator('.profile-preview').getByRole('link', { name: /Portfólio/ })
+  ).toBeVisible();
   expect(request.getPatchPayload()).toEqual({
     externalLinks: [{ label: 'Portfólio', url: 'https://portfolio.example.com' }]
   });
@@ -203,7 +207,7 @@ test('usuário autenticado acessa o perfil sem overflow no mobile', async ({ pag
   await expect(page).toHaveURL(/\/profile$/);
   await expect(page.getByRole('heading', { name: 'Maria Souza' })).toBeVisible();
   await expect(page.getByText(/Construindo comunidades/)).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Personalizar perfil' })).toBeHidden();
+  await expect(page.getByRole('heading', { name: 'Editar perfil' })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     await page.evaluate(() => document.documentElement.clientWidth)
   );
@@ -218,7 +222,9 @@ test('perfil local preserva hierarquia e mídia no desktop', async ({ page }) =>
   await expect(page.getByRole('img', { name: 'Avatar de Maria Souza' })).toBeVisible();
   await expect(page.locator('.profile-header__banner-image')).toBeVisible();
   await expect(page.getByRole('link', { name: /Site pessoal/ })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Personalizar perfil' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Editar perfil' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Editar perfil' }).click();
+  await expect(page.getByRole('heading', { name: 'Editar perfil' })).toBeVisible();
   await expect(page.getByText('128 amigos')).toHaveCount(0);
   await expect(page.locator('.profile-meta')).toHaveCSS('border-width', '0px');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
@@ -249,9 +255,11 @@ test('tema do Profile permanece independente do App Theme no browser', async ({ 
   await page.setViewportSize({ width: 1440, height: 900 });
   await mockAuthenticatedProfile(page);
   await page.goto('/profile');
+  await page.getByRole('button', { name: 'Editar perfil' }).click();
+  await page.getByText('Opções avançadas de cor').click();
 
-  const primary = page.getByRole('textbox', { name: 'Cor principal hexadecimal' });
-  const secondary = page.getByRole('textbox', { name: 'Cor secundária hexadecimal' });
+  const primary = page.getByRole('textbox', { name: 'Cor do perfil hexadecimal' });
+  const secondary = page.getByRole('textbox', { name: 'Cor de apoio hexadecimal' });
   const shell = page.locator('.profile-shell');
 
   for (const combination of [
@@ -273,8 +281,10 @@ test('tema do Profile permanece independente do App Theme no browser', async ({ 
   }
 
   await page.getByRole('radio', { name: 'Gradiente' }).check();
-  await page.getByRole('textbox', { name: 'Cor 1 hexadecimal' }).fill('#FFB6D9');
-  await page.getByRole('textbox', { name: 'Cor 2 hexadecimal' }).fill('#8B5CF6');
+  await page
+    .getByRole('textbox', { name: 'Cor do nick hexadecimal', exact: true })
+    .fill('#FFB6D9');
+  await page.getByRole('textbox', { name: 'Segunda cor do nick hexadecimal' }).fill('#8B5CF6');
   await expect(shell).toHaveAttribute('data-nickname-mode', 'gradient');
 });
 
