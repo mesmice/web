@@ -7,6 +7,7 @@ import { DirectConversationHeader } from '../components/direct-conversation-head
 import { DirectConversationHistory } from '../components/direct-conversation-history.js';
 import { getOtherParticipants } from '../components/dm-list-utils.js';
 import { useConversations } from '../queries/use-conversations.js';
+import { useSyncActiveConversationRead } from '../queries/use-sync-active-conversation-read.js';
 
 export function DmListPage() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export function DmListPage() {
   const conversationsQuery = useConversations();
   const conversations = conversationsQuery.data?.items ?? [];
   const activeConversation = conversations.find((item) => item.id === conversationId);
+  useSyncActiveConversationRead(activeConversation, conversationsQuery.dataUpdatedAt);
   const mentionUsers = activeConversation
     ? getOtherParticipants(activeConversation, currentUserId).map((participant) => ({
         id: participant.id,

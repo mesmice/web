@@ -17,3 +17,25 @@ export function insertConversationCreated(
     }
   );
 }
+
+export function setConversationUnreadCount(
+  queryClient: QueryClient,
+  conversationId: string,
+  unreadCount: number
+): void {
+  queryClient.setQueriesData<ConversationListResponse>(
+    { queryKey: conversationKeys.lists() },
+    (current) => {
+      if (!current) return current;
+      let changed = false;
+      const items = current.items.map((conversation) => {
+        if (conversation.id !== conversationId || conversation.unreadCount === unreadCount) {
+          return conversation;
+        }
+        changed = true;
+        return { ...conversation, unreadCount };
+      });
+      return changed ? { ...current, items } : current;
+    }
+  );
+}

@@ -109,4 +109,42 @@ describe('DmListPage', () => {
     expect(await screen.findByRole('heading', { name: 'Comece a conversa' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Voltar para conversas' })).toBeDefined();
   });
+
+  it('remove o badge somente depois de marcar a DM selecionada como lida', async () => {
+    let readRequests = 0;
+    let releaseRead!: () => void;
+    const readPending = new Promise<void>((resolve) => {
+      releaseRead = resolve;
+    });
+    const unreadConversation = { ...conversation, unreadCount: 4 };
+    server.use(
+      http.get('*/api/v1/channels', () => HttpResponse.json({ items: [unreadConversation] })),
+      http.get('*/api/v1/channels/:channelId/messages', () =>
+        HttpResponse.json({ items: [], meta: { nextCursor: null } })
+      ),
+      http.post('*/api/v1/channels/:channelId/read', async ({ request }) => {
+        readRequests += 1;
+        expect(await request.json()).toEqual({});
+        await readPending;
+        return HttpResponse.json({ lastReadMessageId: 'message-4' });
+      })
+    );
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/app/dms/dm-1']}>
+          <Routes>
+            <Route path="/app/dms/:conversationId" element={<DmListPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    expect(await screen.findByRole('button', { name: 'Bia, 4 não lidas' })).toBeDefined();
+    await waitFor(() => expect(readRequests).toBe(1));
+    act(() => releaseRead());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Bia' })).toBeDefined());
+    expect(screen.queryByLabelText('4 mensagens não lidas')).toBeNull();
+    expect(readRequests).toBe(1);
+  });
 });
