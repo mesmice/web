@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { RefreshCw, WifiOff } from 'lucide-react';
 import type { ConversationSummary } from '../../../lib/types/conversations.js';
 import type { ConnectionStatus } from '../../../stores/ui-store.js';
@@ -17,17 +18,20 @@ interface DmListProps {
   onSelect: (conversation: ConversationSummary) => void;
 }
 
-export function DmList({
-  conversations,
-  currentUserId,
-  activeConversationId,
-  connectionStatus,
-  loading,
-  fetching,
-  error,
-  onRetry,
-  onSelect
-}: DmListProps) {
+export const DmList = forwardRef<HTMLHeadingElement, DmListProps>(function DmList(
+  {
+    conversations,
+    currentUserId,
+    activeConversationId,
+    connectionStatus,
+    loading,
+    fetching,
+    error,
+    onRetry,
+    onSelect
+  },
+  headingRef
+) {
   const offline = connectionStatus === 'disconnected' || connectionStatus === 'unavailable';
 
   return (
@@ -37,7 +41,11 @@ export function DmList({
     >
       <header className="flex min-h-[74px] items-center justify-between border-b border-[color:var(--color-border-default)] px-4 py-3">
         <div>
-          <h1 className="text-base font-bold text-[color:var(--color-brand-deep-purple)]">
+          <h1
+            ref={headingRef}
+            tabIndex={-1}
+            className="rounded-sm text-base font-bold text-[color:var(--color-brand-deep-purple)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-border-focus)]"
+          >
             Mensagens
           </h1>
           <p className="text-xs text-[color:var(--color-text-muted)]">Conversas diretas</p>
@@ -118,4 +126,4 @@ export function DmList({
       </div>
     </aside>
   );
-}
+});

@@ -1,3 +1,4 @@
+import type { Ref } from 'react';
 import { ArrowLeft, Users } from 'lucide-react';
 import type { ConversationSummary } from '../../../lib/types/conversations.js';
 import { getConversationLabel, getOtherParticipants } from './dm-list-utils.js';
@@ -6,6 +7,7 @@ interface DirectConversationHeaderProps {
   conversation: ConversationSummary;
   currentUserId: string;
   onBack: () => void;
+  headingRef?: Ref<HTMLHeadingElement>;
 }
 
 function initials(value: string): string {
@@ -18,7 +20,8 @@ function initials(value: string): string {
 export function DirectConversationHeader({
   conversation,
   currentUserId,
-  onBack
+  onBack,
+  headingRef
 }: DirectConversationHeaderProps) {
   const participants = getOtherParticipants(conversation, currentUserId);
   const participant = conversation.type === 'DM' ? participants[0] : undefined;
@@ -48,7 +51,11 @@ export function DirectConversationHeader({
         )}
       </span>
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-base font-semibold text-[color:var(--color-text-primary)]">
+        <h1
+          ref={headingRef}
+          tabIndex={-1}
+          className="truncate rounded-sm text-base font-semibold text-[color:var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-border-focus)]"
+        >
           {label}
         </h1>
         <p className="mt-0.5 truncate text-xs text-[color:var(--color-text-muted)]">
