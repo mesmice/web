@@ -20,14 +20,15 @@ export interface NicknameTheme extends ProfileThemeColors {
   mode: NicknameMode;
 }
 
-const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+const HEX_COLOR_PATTERN = /^#?[0-9a-f]{6}$/i;
 
 export function isHexColor(value: string): boolean {
   return HEX_COLOR_PATTERN.test(value);
 }
 
 export function normalizeHexColor(value: string): string {
-  return value.toUpperCase();
+  const trimmedValue = value.trim();
+  return `${trimmedValue.startsWith('#') ? '' : '#'}${trimmedValue}`.toUpperCase();
 }
 
 export function getReadableProfileColors(primary: string, secondary: string) {

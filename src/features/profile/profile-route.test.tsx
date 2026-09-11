@@ -55,7 +55,7 @@ describe('rota /profile', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Maria Souza' })).toBeDefined();
     expect(screen.queryByText('Construindo comunidades com cuidado e criando espaços para boas conversas.')).toBeNull();
-    expect(screen.getByText('Nenhuma bio adicionada.')).toBeDefined();
+    expect(screen.getByText('Sem bio no momento.')).toBeDefined();
   });
 
   it('resolve /users/:userId para o perfil público autenticado', async () => {

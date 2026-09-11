@@ -11,13 +11,13 @@ describe('ProfileIdentity', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Maria Souza' })).toBeDefined();
     expect(screen.getByText('@maria')).toBeDefined();
     expect(screen.getByLabelText('Presença: online')).toBeDefined();
-    expect(screen.queryByRole('button', { name: 'Editar perfil' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Editar nome e username' })).toBeNull();
   });
 
   it('permite abrir e fechar o editor mesmo sem onSave (modo preview)', () => {
     render(<ProfileIdentity displayName="Maria Souza" username="maria" presence="online" isOwner />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Editar nome e username' }));
     fireEvent.change(screen.getByLabelText('Nome de exibição'), { target: { value: 'Nova' } });
     fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
 
@@ -36,7 +36,7 @@ describe('ProfileIdentity', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Editar nome e username' }));
     fireEvent.change(screen.getByLabelText('Nome de exibição'), {
       target: { value: 'Maria Atualizada' }
     });
@@ -60,7 +60,7 @@ describe('ProfileIdentity', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Editar nome e username' }));
     fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'ocupado' } });
 
     await screen.findByText('Este username já está em uso.');
@@ -83,7 +83,7 @@ describe('ProfileIdentity', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Editar nome e username' }));
     fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'maria_nova' } });
 
     await screen.findByText('Username disponível!');
@@ -105,7 +105,7 @@ describe('ProfileIdentity', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Editar nome e username' }));
     fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'ab-cd' } });
 
     expect(await screen.findByText(/Use 3 a 20 caracteres/)).toBeDefined();
@@ -123,7 +123,7 @@ describe('ProfileIdentity', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Editar nome e username' }));
     fireEvent.change(screen.getByLabelText('Nome de exibição'), { target: { value: 'Rascunho' } });
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
 
@@ -143,7 +143,7 @@ describe('ProfileIdentity', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Editar perfil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Editar nome e username' }));
     fireEvent.change(screen.getByLabelText('Nome de exibição'), { target: { value: 'Nova' } });
     fireEvent.click(screen.getByRole('button', { name: 'Salvar' }));
 
