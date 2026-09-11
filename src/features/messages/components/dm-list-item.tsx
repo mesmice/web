@@ -92,6 +92,7 @@ export function DmListItem({ conversation, currentUserId, active, onSelect }: Dm
   return (
     <li>
       <button
+        data-conversation-id={conversation.id}
         type="button"
         className={`flex w-full items-center gap-3 rounded-lg border-0 px-3 py-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-border-focus)] focus-visible:ring-offset-2 ${
           active
