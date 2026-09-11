@@ -5,7 +5,7 @@ import type {
   ConversationListResponse,
   ConversationSummary
 } from '../../../lib/types/conversations.js';
-import { insertConversationCreated } from './conversation-cache.js';
+import { insertConversationCreated, setConversationUnreadCount } from './conversation-cache.js';
 
 const conversation: ConversationSummary = {
   id: 'dm-new',
@@ -52,5 +52,38 @@ describe('conversation.created cache update', () => {
     expect(
       queryClient.getQueryData<ConversationListResponse>(conversationKeys.list())?.items
     ).toHaveLength(1);
+  });
+});
+
+describe('conversation unread cache update', () => {
+  it('updates every loaded list without changing API order or unrelated conversations', () => {
+    const queryClient = new QueryClient();
+    const unreadConversation = { ...conversation, unreadCount: 4 };
+    const otherConversation = { ...conversation, id: 'dm-other', unreadCount: 2 };
+    queryClient.setQueryData<ConversationListResponse>(conversationKeys.list(), {
+      items: [unreadConversation, otherConversation]
+    });
+    queryClient.setQueryData<ConversationListResponse>(conversationKeys.list(20), {
+      items: [otherConversation, unreadConversation]
+    });
+
+    setConversationUnreadCount(queryClient, conversation.id, 0);
+
+    expect(
+      queryClient
+        .getQueryData<ConversationListResponse>(conversationKeys.list())
+        ?.items.map(({ id, unreadCount }) => [id, unreadCount])
+    ).toEqual([
+      [conversation.id, 0],
+      ['dm-other', 2]
+    ]);
+    expect(
+      queryClient
+        .getQueryData<ConversationListResponse>(conversationKeys.list(20))
+        ?.items.map(({ id, unreadCount }) => [id, unreadCount])
+    ).toEqual([
+      ['dm-other', 2],
+      [conversation.id, 0]
+    ]);
   });
 });
