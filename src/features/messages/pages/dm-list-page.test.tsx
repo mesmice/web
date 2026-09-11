@@ -80,7 +80,12 @@ describe('DmListPage', () => {
   });
 
   it('armazena a seleção na URL e marca a conversa como ativa', async () => {
-    server.use(http.get('*/api/v1/channels', () => HttpResponse.json({ items: [conversation] })));
+    server.use(
+      http.get('*/api/v1/channels', () => HttpResponse.json({ items: [conversation] })),
+      http.get('*/api/v1/channels/:channelId/messages', () =>
+        HttpResponse.json({ items: [], meta: { nextCursor: null } })
+      )
+    );
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
       <QueryClientProvider client={queryClient}>
@@ -101,5 +106,7 @@ describe('DmListPage', () => {
     );
     expect(item.getAttribute('aria-current')).toBe('page');
     expect(screen.getByRole('heading', { name: 'Bia' })).toBeDefined();
+    expect(await screen.findByRole('heading', { name: 'Comece a conversa' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Voltar para conversas' })).toBeDefined();
   });
 });
