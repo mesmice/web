@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { ThemeToggle } from '../components/ui/theme-toggle.js';
 import { LogoutButton } from '../features/auth/logout-button.js';
 import { useAuthStore } from '../stores/auth-store.js';
@@ -87,6 +87,11 @@ export function RootLayout() {
           <Link to="/" className="layout__brand" aria-label="Mesmice, página inicial">
             Mesmice
           </Link>
+          {authStatus === 'authenticated' ? (
+            <nav className="layout__navigation" aria-label="Navegação principal">
+              <NavLink to="/app/dms">Mensagens</NavLink>
+            </nav>
+          ) : null}
           <ThemeToggle />
           {authStatus === 'authenticated' && <LogoutButton />}
           <span
