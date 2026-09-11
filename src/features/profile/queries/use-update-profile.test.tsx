@@ -57,12 +57,9 @@ describe('useUpdateProfile', () => {
     expect(queryClient.getQueryData(profileKeys.me())).toEqual(MOCK_USER)
   })
 
-  it('restringe o payload aos campos aceitos pelo backend', () => {
-    const accepted: UpdateProfilePayload = { bio: null, presence: 'idle' }
-    // @ts-expect-error username não pertence ao PATCH /users/me
-    const unsupported: UpdateProfilePayload = { username: 'novo-username' }
+  it('aceita username como campo opcional do payload', () => {
+    const accepted: UpdateProfilePayload = { bio: null, presence: 'idle', username: 'novo_username' }
 
-    expect(accepted).toEqual({ bio: null, presence: 'idle' })
-    expect(unsupported).toEqual({ username: 'novo-username' })
+    expect(accepted).toEqual({ bio: null, presence: 'idle', username: 'novo_username' })
   })
 })

@@ -17,7 +17,7 @@ import { usePublicProfile } from './queries/use-public-profile.js';
 import { useUpdateProfile } from './queries/use-update-profile.js';
 import { useUploadProfileMedia } from './queries/use-upload-profile-media.js';
 import type { ProfileMediaKind } from './api/profile-media-endpoints.js';
-import type { UpdateProfilePayload } from './api/profile-endpoints.js';
+import { checkUsernameAvailability, type UpdateProfilePayload } from './api/profile-endpoints.js';
 import type { ProcessedProfileMedia } from './media/image-processing.js';
 import './profile-page.css';
 import {
@@ -31,6 +31,7 @@ import {
 export interface ProfileExperienceProps {
   profile: PublicUser;
   isOwner?: boolean;
+  onSaveIdentity?: (patch: { displayName?: string; username?: string }) => Promise<void>;
   onSaveBio?: (bio: string | null) => Promise<void>;
   onSaveCustomization?: (
     profile: Pick<UpdateProfilePayload, 'displayName' | 'bio' | 'profileColor'>
@@ -45,6 +46,7 @@ export interface ProfileExperienceProps {
 export function ProfileExperience({
   profile,
   isOwner = false,
+  onSaveIdentity,
   onSaveBio,
   onSaveCustomization,
   onSaveLinks,
@@ -87,6 +89,12 @@ export function ProfileExperience({
       setSaveFeedback(null);
       feedbackTimerRef.current = null;
     }, 5000);
+  }
+
+  async function saveIdentity(patch: { displayName?: string; username?: string }) {
+    if (!onSaveIdentity) return;
+    await onSaveIdentity(patch);
+    if (patch.displayName !== undefined) setPreviewDisplayName(patch.displayName);
   }
 
   function resetCustomization() {
@@ -208,6 +216,9 @@ export function ProfileExperience({
                   displayName={previewDisplayName}
                   username={profile.username}
                   presence={profile.presence}
+                  isOwner={isOwner && !isEditing}
+                  onSave={onSaveIdentity ? saveIdentity : undefined}
+                  onCheckUsername={isOwner ? checkUsernameAvailability : undefined}
                 />
                 {tagline ? <p className="profile-shell__tagline">“{tagline}”</p> : null}
                 <div className="profile-page__about profile-mobile-card">
@@ -277,6 +288,9 @@ function AuthenticatedProfilePage() {
     <ProfileExperience
       profile={profileQuery.data}
       isOwner
+      onSaveIdentity={async (patch) => {
+        await updateProfile.mutateAsync(patch);
+      }}
       onSaveBio={async (bio) => {
         await updateProfile.mutateAsync({ bio });
       }}
