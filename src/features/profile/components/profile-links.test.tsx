@@ -1,8 +1,8 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ProfileLinks } from './profile-links.js';
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.useRealTimers(); });
 const links = [{ label: 'GitHub', url: 'https://github.com/mesmice' }, { label: 'Meu site', url: 'https://example.com' }];
 
 describe('ProfileLinks', () => {
@@ -18,6 +18,13 @@ describe('ProfileLinks', () => {
     render(<ProfileLinks links={[{ label: 'Legado', url: 'javascript:alert(1)' }]} />);
     expect(screen.getByText('Legado')).toBeDefined();
     expect(screen.queryByRole('link', { name: /Legado/ })).toBeNull();
+  });
+
+  it('mantém URLs longas contidas e expõe a ação de edição acessível', () => {
+    render(<ProfileLinks links={[{ label: 'Projeto', url: `https://example.com/${'segmento-'.repeat(70)}` }]} isOwner onSave={vi.fn()} />);
+    expect(screen.getByRole('link', { name: /Projeto/ })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Editar links' })).toBeDefined();
+    expect(document.querySelector('.profile-connections__list li')).not.toBeNull();
   });
 
   it('mostra CTA vazio ao owner e permite adicionar, editar, remover e cancelar', () => {
@@ -81,5 +88,43 @@ describe('ProfileLinks', () => {
     expect((screen.getByLabelText('Nome') as HTMLInputElement).value).toBe('GitHub editado');
     fireEvent.click(screen.getByRole('button', { name: 'Salvar links' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2));
+  });
+
+  it('mostra feedback acessível de link e remove-o após cinco segundos', async () => {
+    vi.useFakeTimers();
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<ProfileLinks links={links.slice(0, 1)} isOwner onSave={onSave} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Editar links' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar links' }));
+    await vi.waitFor(() => expect(screen.getByRole('status').textContent).toContain('Link salvo'));
+    act(() => vi.advanceTimersByTime(3000));
+    fireEvent.click(screen.getByRole('button', { name: 'Editar links' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar links' }));
+    await vi.waitFor(() => expect(onSave).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(screen.getByRole('status').textContent).toContain('Link salvo'));
+    act(() => vi.advanceTimersByTime(2000));
+    expect(screen.getByRole('status').textContent).toContain('Link salvo');
+    act(() => vi.advanceTimersByTime(3000));
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('limpa o timer do feedback ao desmontar e mantém erros fora do aria-live de sucesso', async () => {
+    vi.useFakeTimers();
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
+    const onSave = vi.fn().mockRejectedValueOnce(new Error('falha')).mockResolvedValue(undefined);
+    const { unmount } = render(
+      <ProfileLinks links={links.slice(0, 1)} isOwner onSave={onSave} />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar links' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar links' }));
+    await vi.waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Não foi possível'));
+    expect(screen.queryByRole('status')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar links' }));
+    await vi.waitFor(() => expect(screen.getByRole('status').textContent).toContain('Link salvo'));
+    unmount();
+    expect(clearTimeoutSpy).toHaveBeenCalled();
+    clearTimeoutSpy.mockRestore();
   });
 });

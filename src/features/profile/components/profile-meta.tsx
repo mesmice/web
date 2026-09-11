@@ -23,7 +23,9 @@ export function ProfileMeta({ createdAt, badges, friendsCount }: ProfileMetaProp
   return (
     <div className="profile-meta" aria-label="Informações do perfil">
       {hasFriendsCount || memberSince ? (
-        <p className="profile-meta__summary">
+        <div className="profile-subsection profile-meta__section">
+          {memberSince ? <h2 className="profile-section__title">Membro desde</h2> : null}
+          <p className="profile-meta__summary">
           {hasFriendsCount ? (
             <span>
               {friendsCount} {friendsCount === 1 ? 'amigo' : 'amigos'}
@@ -34,8 +36,9 @@ export function ProfileMeta({ createdAt, badges, friendsCount }: ProfileMetaProp
               •
             </span>
           ) : null}
-          {memberSince ? <span>Membro desde {memberSince}</span> : null}
-        </p>
+          {memberSince ? <span>{memberSince}</span> : null}
+          </p>
+        </div>
       ) : null}
       {badges.length > 0 ? (
         <ul className="profile-badges" aria-label="Badges do perfil">

@@ -1,8 +1,8 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ProfileAbout } from './profile-about.js'
 
-afterEach(() => cleanup())
+afterEach(() => { cleanup(); vi.useRealTimers() })
 
 describe('ProfileAbout', () => {
   it('limita a bio ao contrato de 190 caracteres', () => {
@@ -39,5 +39,41 @@ describe('ProfileAbout', () => {
     expect(screen.getByRole('button', { name: 'Cancelar' }).hasAttribute('disabled')).toBe(true)
     resolveSave()
     await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Bio' })).toBeNull())
+  })
+
+  it('mostra feedback acessível por cinco segundos e reinicia o timer', async () => {
+    vi.useFakeTimers()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<ProfileAbout bio="Bio existente" isOwner onSave={onSave} />)
+    fireEvent.click(screen.getByRole('button', { name: /Bio existente/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar bio' }))
+    await vi.waitFor(() => expect(screen.getByRole('status').textContent).toContain('Bio salva'))
+    act(() => vi.advanceTimersByTime(3000))
+    fireEvent.click(screen.getByRole('button', { name: /Bio existente/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar bio' }))
+    await vi.waitFor(() => expect(onSave).toHaveBeenCalledTimes(2))
+    await vi.waitFor(() => expect(screen.getByRole('status').textContent).toContain('Bio salva'))
+    act(() => vi.advanceTimersByTime(2000))
+    expect(screen.getByRole('status').textContent).toContain('Bio salva')
+    act(() => vi.advanceTimersByTime(3000))
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('mantém erro separado do feedback de sucesso e limpa o timer ao desmontar', async () => {
+    vi.useFakeTimers()
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
+    const onSave = vi.fn().mockRejectedValueOnce(new Error('falha')).mockResolvedValue(undefined)
+    const { unmount } = render(<ProfileAbout bio="Bio existente" isOwner onSave={onSave} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /Bio existente/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar bio' }))
+    await vi.waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Não foi possível'))
+    expect(screen.queryByRole('status')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Salvar bio' }))
+    await vi.waitFor(() => expect(screen.getByRole('status').textContent).toContain('Bio salva'))
+    unmount()
+    expect(clearTimeoutSpy).toHaveBeenCalled()
+    clearTimeoutSpy.mockRestore()
   })
 })

@@ -7,10 +7,14 @@ import type { ProcessedProfileMedia } from '../media/image-processing.js';
 import { ProfileMediaEditor } from '../media/profile-media-editor.js';
 import './profile-header.css';
 
-type ProfileHeaderProps = Pick<PrivateUser, 'avatarUrl' | 'avatarThumbUrl' | 'bannerUrl' | 'displayName'> & {
-  avatarFrameUrl?: PrivateUser['avatarFrameUrl'];
+type ProfileHeaderProps = Pick<
+  PrivateUser,
+  'avatarUrl' | 'avatarThumbUrl' | 'bannerUrl' | 'displayName'
+> & {
   isOwner?: boolean;
   onUploadMedia?: (kind: ProfileMediaKind, media: ProcessedProfileMedia) => Promise<void>;
+  requestedEditing?: ProfileMediaKind | null;
+  onRequestedEditingChange?: (kind: ProfileMediaKind | null) => void;
 };
 
 function getAvatarFallback(displayName: string): string {
@@ -20,13 +24,16 @@ function getAvatarFallback(displayName: string): string {
 export function ProfileHeader({
   avatarUrl,
   avatarThumbUrl,
-  avatarFrameUrl,
   bannerUrl,
   displayName,
   isOwner = false,
-  onUploadMedia
+  onUploadMedia,
+  requestedEditing,
+  onRequestedEditingChange
 }: ProfileHeaderProps) {
-  const [editing, setEditing] = useState<ProfileMediaKind | null>(null);
+  const [internalEditing, setInternalEditing] = useState<ProfileMediaKind | null>(null);
+  const editing = requestedEditing === undefined ? internalEditing : requestedEditing;
+  const setEditing = onRequestedEditingChange ?? setInternalEditing;
   const canEdit = isOwner && onUploadMedia;
 
   return (
@@ -50,12 +57,19 @@ export function ProfileHeader({
       >
         {bannerUrl ? <img src={bannerUrl} alt="" className="profile-header__banner-image" /> : null}
         {canEdit ? (
-          <span
-            className="profile-header__banner-action"
-            aria-hidden="true"
+          <Button
+            type="button"
+            variant="secondary"
+            className="profile-header__media-edit profile-header__media-edit--banner"
+            aria-label="Trocar banner"
+            title="Trocar banner"
+            onClick={(event) => {
+              event.stopPropagation();
+              setEditing('banner');
+            }}
           >
-            <Camera size={18} />
-          </span>
+            <Camera size={18} aria-hidden="true" />
+          </Button>
         ) : null}
       </div>
       <div
@@ -75,19 +89,11 @@ export function ProfileHeader({
             : undefined
         }
       >
-        {avatarThumbUrl ?? avatarUrl ? (
+        {(avatarThumbUrl ?? avatarUrl) ? (
           <img src={avatarThumbUrl ?? avatarUrl ?? undefined} alt={`Avatar de ${displayName}`} />
         ) : (
           <span aria-label={`Avatar de ${displayName}`}>{getAvatarFallback(displayName)}</span>
         )}
-        {avatarFrameUrl ? (
-          <img
-            src={avatarFrameUrl}
-            alt=""
-            aria-hidden="true"
-            className="profile-header__avatar-frame"
-          />
-        ) : null}
         {canEdit ? (
           <Button
             type="button"
