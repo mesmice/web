@@ -210,6 +210,7 @@ function isServerMessage(value: unknown): value is ServerMessage {
     [
       'pong',
       'ready',
+      'conversation.created',
       'message.created',
       'message.updated',
       'message.deleted',

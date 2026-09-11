@@ -89,6 +89,31 @@ describe('GatewaySocket', () => {
     ])
   })
 
+  it('aceita o evento tipado conversation.created', () => {
+    const onMessage = vi.fn()
+    gateway.onMessage(onMessage)
+    gateway.connect(() => 'access')
+    const socket = FakeWebSocket.instances[0]
+    socket.serverOpen()
+    const event = {
+      type: 'conversation.created',
+      payload: {
+        id: 'dm-1', ownerId: 'user-1', type: 'DM', name: null,
+        participantIds: ['user-1', 'user-2'],
+        participants: [
+          { id: 'user-1', username: 'ana', displayName: 'Ana', avatarUrl: null, presence: 'online' },
+          { id: 'user-2', username: 'bia', displayName: 'Bia', avatarUrl: null, presence: 'offline' }
+        ],
+        unreadCount: 0, createdAt: '2026-09-10T09:00:00.000Z', lastMessageAt: null,
+        permissions: { default: '0', memberOverwrites: [] }
+      }
+    }
+
+    socket.serverMessage(event)
+
+    expect(onMessage).toHaveBeenCalledWith(event)
+  })
+
   it('envia heartbeat somente após abrir e limpa o timer ao desconectar', () => {
     gateway.connect(() => 'access')
     const socket = FakeWebSocket.instances[0]

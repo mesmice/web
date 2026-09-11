@@ -2,14 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, LoaderCircle, MessageCircle, X } from 'lucide-react';
 import {
-  createDirectMessage,
-  getConversations,
   getMessages,
   markChannelRead,
   sendMessage,
-  type DirectMessageChannel,
   type MessageResponse
 } from '../../../lib/api/endpoints.js';
+import { createDirectMessage, getConversations } from '../api/conversation-endpoints.js';
+import type { DirectMessageChannel } from '../../../lib/types/conversations.js';
 import type { FriendListItem } from '../../social/components/friend-list.js';
 import { MessageComposer } from './message-composer.js';
 import type { MentionableUser } from './mention-utils.js';
@@ -25,7 +24,7 @@ async function findOrCreateDirectMessage(recipientId: string): Promise<DirectMes
   const existing = conversations.items.find(
     (channel) => channel.type === 'DM' && channel.participantIds.includes(recipientId)
   );
-  if (existing) return existing;
+  if (existing?.type === 'DM') return existing;
   const response = await createDirectMessage(recipientId);
   return response.channel;
 }

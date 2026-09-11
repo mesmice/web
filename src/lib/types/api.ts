@@ -1,4 +1,5 @@
 import type { ComputedPresence, PrivateUser, PublicUser, TokenPair } from './auth.js';
+import type { ConversationSummary } from './conversations.js';
 export type { ComputedPresence, PrivateUser, PublicUser, UserPresence } from './auth.js';
 
 export type ErrorCode =
@@ -108,6 +109,10 @@ export interface PasswordResetRequestResponse {
 export type ServerMessage =
   | { type: 'pong'; sentAt?: number }
   | { type: 'ready'; userId: string }
+  | {
+      type: 'conversation.created';
+      payload: ConversationSummary;
+    }
   | {
       type: 'message.created';
       payload: {
