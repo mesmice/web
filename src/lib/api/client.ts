@@ -88,7 +88,14 @@ async function parseErrorResponse(response: Response): Promise<ApiRequestError> 
     // corpo não-JSON ou vazio — cai no fallback abaixo
   }
 
-  return new ApiRequestError(response.status, 'INTERNAL', `Erro HTTP ${response.status}.`);
+  return new ApiRequestError(response.status, getHttpErrorCode(response.status), `Erro HTTP ${response.status}.`);
+}
+
+function getHttpErrorCode(status: number): string {
+  if (status === 404) return 'NOT_FOUND';
+  if (status === 413) return 'PAYLOAD_TOO_LARGE';
+  if (status === 415) return 'UNSUPPORTED_MEDIA_TYPE';
+  return 'INTERNAL';
 }
 
 async function execute(path: string, options: RequestOptions): Promise<Response> {
@@ -108,6 +115,9 @@ async function execute(path: string, options: RequestOptions): Promise<Response>
       signal
     });
   } catch (cause) {
+    if (signal?.aborted) {
+      throw new ApiRequestError(0, 'REQUEST_ABORTED', 'O envio foi cancelado.');
+    }
     throw new ApiRequestError(0, 'NETWORK_ERROR', 'Falha de conexão com a API.', {
       cause: String(cause)
     });
@@ -141,4 +151,24 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   }
 
   return (await response.json()) as T;
+}
+
+export async function putPresignedObject(
+  uploadUrl: string,
+  body: Blob,
+  headers: Record<string, string>,
+  signal?: AbortSignal
+): Promise<void> {
+  let response: Response;
+  try {
+    response = await fetch(uploadUrl, { method: 'PUT', headers, body, signal });
+  } catch (cause) {
+    if (signal?.aborted) {
+      throw new ApiRequestError(0, 'REQUEST_ABORTED', 'O envio foi cancelado.');
+    }
+    throw new ApiRequestError(0, 'NETWORK_ERROR', 'Falha de conexão durante o envio da imagem.', {
+      cause: String(cause)
+    });
+  }
+  if (!response.ok) throw await parseErrorResponse(response);
 }

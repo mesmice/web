@@ -9,10 +9,8 @@ import { ApiRequestError } from '../../lib/api/client.js';
 import { applyAuthenticatedSession } from '../../lib/auth/session.js';
 import { Spinner } from '../../components/ui/spinner.js';
 import { AuthBackdrop } from '../../components/ui/auth-backdrop.js';
+import { Input } from '../../components/ui/input.js';
 import './login-page.css';
-
-const inputClass =
-  'mt-2 w-full rounded-lg border border-[#cabeff] bg-white px-3 py-3 text-sm text-[#2b1861] outline-none transition placeholder:text-[#8e7dbd] focus:border-[#693de9] focus:ring-2 focus:ring-[#cabeff]';
 
 function WaveText({ children }: { children: string }) {
   return (
@@ -31,7 +29,6 @@ function WaveText({ children }: { children: string }) {
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const [rememberMe, setRememberMe] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -42,12 +39,9 @@ export function LoginPage() {
   const mascotTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loginMutation = useMutation({
     mutationFn: login,
-    onSuccess: (data) => {
-      applyAuthenticatedSession(
-        { accessToken: data.accessToken, refreshToken: data.refreshToken },
-        data.user
-      );
-      navigate('/');
+    onSuccess: ({ accessToken, refreshToken, user }) => {
+      applyAuthenticatedSession({ accessToken, refreshToken }, user);
+      navigate('/app');
     }
   });
 
@@ -86,7 +80,7 @@ export function LoginPage() {
     setSubmitted(true);
     if (!email.trim() || !password.trim() || loginMutation.isPending) return;
 
-    loginMutation.mutate({ identifier: email.trim(), password, rememberMe });
+    loginMutation.mutate({ identifier: email.trim(), password });
   }
 
   const errorMessage =
@@ -173,18 +167,19 @@ export function LoginPage() {
 
           <form className="space-y-5" noValidate onSubmit={handleSubmit}>
             <label className="block text-xs font-bold uppercase tracking-wide text-[#2b1861]">
-              E-mail ou número de telefone
+              E-mail ou nome de usuário
               <span className="relative block">
                 <Mail
                   size={17}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8e7dbd]"
                 />
-                <input
-                  className={`${inputClass} pl-10 ${submitted && !email.trim() ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+                <Input
+                  className="pl-10"
+                  error={submitted && !email.trim()}
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   type="text"
-                  placeholder="voce@exemplo.com ou (11) 99999-9999"
+                  placeholder="voce@exemplo.com ou username"
                   autoComplete="username"
                   required
                 />
@@ -197,8 +192,9 @@ export function LoginPage() {
                   size={17}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8e7dbd]"
                 />
-                <input
-                  className={`${inputClass} pr-11 pl-10 ${submitted && !password.trim() ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
+                <Input
+                  className="pr-11 pl-10"
+                  error={submitted && !password.trim()}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   type={showPassword ? 'text' : 'password'}
@@ -222,21 +218,18 @@ export function LoginPage() {
                 Esqueceu a senha?
               </Link>
             </label>
-            <label className="flex cursor-pointer items-center gap-3 text-sm text-[#66568d]">
-              <input
-                checked={rememberMe}
-                onChange={(event) => setRememberMe(event.target.checked)}
-                type="checkbox"
-                className="h-4 w-4 accent-[#693de9]"
-              />
-              Lembrar de mim
-            </label>
             <button
               type="submit"
               disabled={loginMutation.isPending}
               className="auth-action-button w-full rounded-lg bg-[#693de9] px-4 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#cabeff] transition focus:outline-none focus:ring-4 focus:ring-[#cabeff]"
             >
-              {loginMutation.isPending ? <Spinner label="Entrando" /> : <WaveText>Entrar</WaveText>}
+              {loginMutation.isPending ? (
+                <>
+                  <Spinner decorative /> Entrando
+                </>
+              ) : (
+                <WaveText>Entrar</WaveText>
+              )}
             </button>
             {errorMessage && (
               <p role="alert" className="text-center text-sm font-bold text-red-600">

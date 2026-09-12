@@ -1,10 +1,19 @@
 :root {
-  /* Identidade Mesmice */
+  /* Brand */
   --color-brand-purple: #693de9;
   --color-brand-lilac: #cabeff;
   --color-brand-deep-purple: #2b1861;
   --color-brand-ink: #080611;
   --color-brand-white: #ffffff;
+  --color-brand-primary: var(--color-brand-purple);
+  --color-brand-primary-hover: color-mix(
+    in srgb,
+    var(--color-brand-purple) 88%,
+    var(--color-brand-deep-purple)
+  );
+  --color-brand-soft: color-mix(in srgb, var(--color-brand-lilac) 38%, white);
+
+  /* Landing identity */
   --color-landing-navbar: #693de9;
   --color-landing-navbar-text: #ffffd8;
   --color-landing-section: #eee8ff;
@@ -21,31 +30,82 @@
   --space-2: 8px;
   --space-4: 16px;
   --space-6: 24px;
+  --radius-sm: 6px;
   --radius-md: 8px;
+  --radius-lg: 12px;
+  --control-height-md: 40px;
 
-  --color-bg: #ffffff;
-  --color-surface: #f2f4f7;
-  --color-surface-raised: #e9ecf1;
-  --color-border: #d0d5dd;
+  /* Product surfaces */
+  --color-surface-primary: #ffffff;
+  --color-surface-secondary: #f7f7fa;
+  --color-surface-elevated: #ffffff;
+  --color-surface-disabled: #f1f2f5;
+
+  /* Product text */
   --color-text-primary: #101828;
   --color-text-secondary: #475467;
-  --color-accent: #4f46e5;
-  --color-accent-hover: #4338ca;
-  --color-focus: #4f46e5;
+  --color-text-muted: #667085;
+  --color-text-disabled: #98a2b3;
+  --color-text-on-brand: #ffffff;
+
+  /* Borders */
+  --color-border-default: #d0d5dd;
+  --color-border-strong: #98a2b3;
+  --color-border-focus: var(--color-brand-primary);
+  --color-border-disabled: #e4e7ec;
+
+  /* Actions */
+  --color-action-primary: var(--color-brand-primary);
+  --color-action-primary-hover: var(--color-brand-lilac);
+  --color-action-primary-text: var(--color-brand-lilac);
+  --color-action-primary-hover-text: var(--color-brand-primary);
+  --color-action-secondary: color-mix(
+    in srgb,
+    var(--color-brand-lilac) 38%,
+    var(--color-surface-primary)
+  );
+  --color-action-secondary-hover: color-mix(
+    in srgb,
+    var(--color-brand-lilac) 58%,
+    var(--color-surface-primary)
+  );
+  --color-action-secondary-text: var(--color-brand-deep-purple);
+
+  /* Feedback and focus */
   --color-success: #12b76a;
   --color-danger: #f04438;
+  --color-danger-hover: #d92d20;
+  --color-danger-soft: #fee4e2;
+  --color-warning: #f79009;
+  --color-focus-ring: color-mix(in srgb, var(--color-brand-lilac) 72%, transparent);
+  --color-overlay: rgb(16 24 40 / 56%);
+
+  /* Compatibility aliases while existing surfaces migrate incrementally. */
+  --color-bg: var(--color-surface-primary);
+  --color-surface: var(--color-surface-secondary);
+  --color-surface-raised: var(--color-action-secondary-hover);
+  --color-border: var(--color-border-default);
+  --color-accent: var(--color-action-primary);
+  --color-accent-hover: var(--color-action-primary-hover);
+  --color-focus: var(--color-border-focus);
 }
 
 [data-theme='dark'] {
-  --color-bg: #0c111d;
-  --color-surface: #161b26;
-  --color-surface-raised: #1f242f;
-  --color-border: #33384a;
+  --color-surface-primary: #0c111d;
+  --color-surface-secondary: #161b26;
+  --color-surface-elevated: #1f242f;
+  --color-surface-disabled: #222735;
   --color-text-primary: #f5f6f8;
   --color-text-secondary: #a5abbd;
-  --color-accent: #6366f1;
-  --color-accent-hover: #7c7ff3;
-  --color-focus: #9498ff;
+  --color-text-muted: #858c9e;
+  --color-text-disabled: #667085;
+  --color-border-default: #33384a;
+  --color-border-strong: #667085;
+  --color-border-disabled: #292e3c;
   --color-success: #34d399;
   --color-danger: #f87171;
+  --color-danger-hover: #fca5a5;
+  --color-danger-soft: rgb(248 113 113 / 16%);
+  --color-warning: #fbbf24;
+  --color-overlay: rgb(3 6 14 / 68%);
 }

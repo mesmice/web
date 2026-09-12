@@ -1,0 +1,18 @@
+.profile-query-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  width: min(100%, 640px);
+  margin: clamp(48px, 12vh, 120px) auto;
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.profile-query-state h1,
+.profile-query-state p {
+  margin: 0;
+}
+
+.profile-query-state p {
+  color: var(--color-text-secondary);
+}
