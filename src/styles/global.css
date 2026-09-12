@@ -1,10 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
 @import 'tailwindcss';
 @import './tokens.css';
-
-@theme inline {
-  --font-sans: var(--font-family-sans);
-}
 
 *,
 *::before,
@@ -14,7 +10,7 @@
 
 body {
   margin: 0;
-  font-family: var(--font-family-sans);
+  font-family: 'Poppins', sans-serif;
   font-size: var(--font-size-md);
   color: var(--color-text-primary);
   background: var(--color-bg);
