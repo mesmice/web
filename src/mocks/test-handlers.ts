@@ -16,15 +16,7 @@ export const MOCK_USER: PrivateUser = {
   displayName: 'Maria Souza',
   bio: null,
   avatarUrl: null,
-  avatarThumbUrl: null,
-  bannerUrl: null,
-  externalLinks: [],
-  profileTheme: null,
-  avatarFrameUrl: null,
-  profileColor: null,
-  badges: [],
   presence: 'online',
-  lastActiveAt: '2026-01-01T12:00:00.000Z',
   createdAt: '2026-01-01T12:00:00.000Z',
   email: 'maria@example.com',
   emailVerified: true
@@ -80,14 +72,5 @@ export const authTestHandlers = [
       return authError(401, 'UNAUTHORIZED', 'Autenticação obrigatória.')
     }
     return HttpResponse.json({ user: MOCK_USER })
-  }),
-
-  http.patch('*/api/v1/users/me', async ({ request }) => {
-    const authorization = request.headers.get('authorization')
-    if (!authorization?.startsWith('Bearer ')) {
-      return authError(401, 'UNAUTHORIZED', 'Autenticação obrigatória.')
-    }
-    const updates = (await request.json()) as Partial<PrivateUser>
-    return HttpResponse.json({ user: { ...MOCK_USER, ...updates } })
   })
 ]

@@ -1,16 +1,13 @@
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent, PointerEvent } from 'react';
 import { Check, ImagePlus, Mail, Smartphone, Upload, X } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { register } from '../../lib/api/endpoints.js';
 import { ApiRequestError } from '../../lib/api/client.js';
 import { applyAuthenticatedSession } from '../../lib/auth/session.js';
 import { Spinner } from '../../components/ui/spinner.js';
 import { AuthBackdrop } from '../../components/ui/auth-backdrop.js';
-import { Input } from '../../components/ui/input.js';
-import { Textarea } from '../../components/ui/textarea.js';
-import { Checkbox } from '../../components/ui/checkbox.js';
 import './register-page.css';
 
 const PASSWORD_MIN_LENGTH = 10;
@@ -72,7 +69,6 @@ const COLORS = [
 const ABOUT_MAX_LENGTH = 190;
 
 type ContactMethod = 'email' | 'phone';
-type Gender = 'masculino' | 'feminino' | 'outro' | 'prefiro_nao_responder';
 type RegistrationData = {
   name: string;
   username: string;
@@ -84,7 +80,6 @@ type RegistrationData = {
   birthMonth: string;
   birthYear: string;
   birthDate: string;
-  gender: Gender | '';
   password: string;
   confirmPassword: string;
   profileColor: string;
@@ -95,6 +90,8 @@ type RegistrationData = {
   termsAccepted: boolean;
 };
 
+const inputClass =
+  'mt-2 w-full rounded-lg border border-[#cabeff] bg-white px-3 py-3 text-sm text-[#2b1861] outline-none transition placeholder:text-[#8e7dbd] focus:border-[#693de9] focus:ring-2 focus:ring-[#cabeff]';
 const optionClass =
   'rounded-lg border px-4 py-3 text-sm font-bold transition focus:outline-none focus:ring-4 focus:ring-[#cabeff]';
 
@@ -196,8 +193,8 @@ function AccountStep({
       </div>
       <label className="block text-xs font-bold uppercase tracking-wide text-[#2b1861]">
         Como podemos chamar você?
-        <Input
-          error={showErrors && !data.name.trim()}
+        <input
+          className={`${inputClass} ${showErrors && !data.name.trim() ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
           value={data.name}
           onChange={(event) => onChange('name', event.target.value)}
           placeholder="Seu nome"
@@ -208,8 +205,8 @@ function AccountStep({
       </label>
       <label className="block text-xs font-bold uppercase tracking-wide text-[#2b1861]">
         Nome de usuário
-        <Input
-          error={showErrors && !data.username.trim()}
+        <input
+          className={`${inputClass} ${showErrors && !data.username.trim() ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
           value={data.username}
           onChange={(event) => onChange('username', event.target.value.trim().toLowerCase())}
           placeholder="como_te_encontram_no_mesmice"
@@ -259,8 +256,8 @@ function AccountStep({
               ))}
             </select>
           )}
-          <Input
-            error={showErrors && !data.contact.trim()}
+          <input
+            className={`${inputClass} ${showErrors && !data.contact.trim() ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
             value={data.contact}
             onChange={(event) =>
               onChange(
@@ -282,8 +279,8 @@ function AccountStep({
       <div className="grid gap-5 sm:grid-cols-2">
         <label className="block text-xs font-bold uppercase tracking-wide text-[#2b1861]">
           Crie uma senha
-          <Input
-            error={showErrors && data.password.trim().length < PASSWORD_MIN_LENGTH}
+          <input
+            className={`${inputClass} ${showErrors && data.password.trim().length < PASSWORD_MIN_LENGTH ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
             value={data.password}
             onChange={(event) => onChange('password', event.target.value)}
             type="password"
@@ -300,14 +297,14 @@ function AccountStep({
         </label>
         <label className="block text-xs font-bold uppercase tracking-wide text-[#2b1861]">
           Confirme sua senha
-          <Input
-            error={showErrors && data.password !== data.confirmPassword}
+          <input
+            className={`${inputClass} ${showErrors && data.password !== data.confirmPassword ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : ''}`}
             value={data.confirmPassword}
             onChange={(event) => onChange('confirmPassword', event.target.value)}
             type="password"
             placeholder="Digite a senha novamente"
             autoComplete="new-password"
-            minLength={PASSWORD_MIN_LENGTH}
+            minLength={8}
             required
           />
           {showErrors && data.password !== data.confirmPassword && (
@@ -318,11 +315,11 @@ function AccountStep({
         </label>
       </div>
       <label className="flex items-start gap-3 text-sm leading-5 text-[#66568d]">
-        <Checkbox
+        <input
           type="checkbox"
           checked={data.termsAccepted}
           onChange={(event) => onTermsChange(event.target.checked)}
-          className="mt-1 shrink-0"
+          className="mt-1 h-4 w-4 shrink-0 accent-[#693de9]"
           required
         />
         <span>Concordo com os termos de uso e a política de privacidade.</span>
@@ -411,7 +408,6 @@ function ProfileStep({
   onAvatarChange,
   onAvatarRemove,
   onAboutChange,
-  onGenderChange,
   onBirthDateChange,
   avatarPosition,
   onAvatarPositionChange
@@ -422,7 +418,6 @@ function ProfileStep({
   onAvatarChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onAvatarRemove: () => void;
   onAboutChange: (about: string) => void;
-  onGenderChange: (gender: Gender) => void;
   onBirthDateChange: (part: 'day' | 'month' | 'year', value: string) => void;
   avatarPosition: { x: number; y: number };
   onAvatarPositionChange: (position: { x: number; y: number }) => void;
@@ -435,31 +430,6 @@ function ProfileStep({
         Escolha uma foto e uma cor. Você já vê o resultado igual vai ficar no seu perfil.
       </p>
       <BirthDateFields data={data} showErrors={showErrors} onBirthDateChange={onBirthDateChange} />
-      <fieldset className="mt-6">
-        <legend className="text-xs font-bold uppercase tracking-wide text-[#2b1861]">Gênero</legend>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          {[
-            ['masculino', 'Masculino'],
-            ['feminino', 'Feminino'],
-            ['outro', 'Outro'],
-            ['prefiro_nao_responder', 'Prefiro não responder']
-          ].map(([value, label]) => (
-            <label
-              key={value}
-              className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#cabeff] bg-white px-3 py-3 text-sm text-[#66568d] transition hover:border-[#693de9]"
-            >
-              <input
-                type="radio"
-                name="gender"
-                className="register-gender__radio"
-                checked={data.gender === value}
-                onChange={() => onGenderChange(value as Gender)}
-              />
-              {label}
-            </label>
-          ))}
-        </div>
-      </fieldset>
       <div className="mt-6 flex flex-col items-center gap-8 md:flex-row md:items-start">
         <label className="group relative block shrink-0 cursor-pointer">
           <div
@@ -552,8 +522,8 @@ function ProfileStep({
 
           <label className="mt-6 block text-xs font-bold uppercase tracking-wide text-[#2b1861]">
             Sobre você <span className="font-normal normal-case text-[#8e7dbd]">(opcional)</span>
-            <Textarea
-              className="resize-none"
+            <textarea
+              className={`${inputClass} min-h-[92px] resize-none`}
               value={data.about}
               onChange={(event) => onAboutChange(event.target.value.slice(0, ABOUT_MAX_LENGTH))}
               maxLength={ABOUT_MAX_LENGTH}
@@ -672,10 +642,9 @@ function ReviewStep({
 }
 
 export function RegisterPage() {
-  const navigate = useNavigate();
-  const submitted = false;
   const [step, setStep] = useState(0);
   const [stepDirection, setStepDirection] = useState<'forward' | 'backward'>('forward');
+  const [submitted, setSubmitted] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const [avatarPosition, setAvatarPosition] = useState({ x: 50, y: 50 });
   const [data, setData] = useState<RegistrationData>({
@@ -689,7 +658,6 @@ export function RegisterPage() {
     birthMonth: '',
     birthYear: '',
     birthDate: '',
-    gender: '',
     password: '',
     confirmPassword: '',
     profileColor: BRAND.purple,
@@ -737,9 +705,6 @@ export function RegisterPage() {
   function updateAbout(about: string) {
     setData((current) => ({ ...current, about }));
   }
-  function updateGender(gender: Gender) {
-    setData((current) => ({ ...current, gender }));
-  }
   function toggleInterest(interest: string) {
     setData((current) => ({
       ...current,
@@ -772,7 +737,7 @@ export function RegisterPage() {
         { accessToken: result.accessToken, refreshToken: result.refreshToken },
         result.user
       );
-      navigate('/app');
+      setSubmitted(true);
     }
   });
 
@@ -890,7 +855,6 @@ export function RegisterPage() {
                     onAvatarChange={handleAvatarChange}
                     onAvatarRemove={handleAvatarRemove}
                     onAboutChange={updateAbout}
-                    onGenderChange={updateGender}
                     onBirthDateChange={updateBirthDate}
                     avatarPosition={avatarPosition}
                     onAvatarPositionChange={setAvatarPosition}
