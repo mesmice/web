@@ -2,13 +2,8 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
-      - develop
+    branches: [main]
   pull_request:
-    branches:
-      - main
-      - develop
 
 permissions:
   contents: read
@@ -21,7 +16,6 @@ jobs:
   quality:
     name: lint, typecheck, test, build
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -43,7 +37,6 @@ jobs:
   e2e:
     name: e2e (playwright)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 

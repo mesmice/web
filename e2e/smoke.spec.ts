@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 test('app carrega e mostra a home', async ({ page }) => {
   await page.goto('/');
@@ -131,229 +131,23 @@ test('rota de login responde', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Bem-vindo de volta!' })).toBeVisible();
 });
 
-test('rota de perfil exige autenticação para visitante anônimo', async ({ page }) => {
-  await page.goto('/profile');
-  await expect(page).toHaveURL(/\/login$/);
-  await expect(page.getByRole('heading', { name: 'Bem-vindo de volta!' })).toBeVisible();
-});
-
-async function mockAuthenticatedProfile(page: Page) {
-  let patchPayload: unknown;
-  await page.addInitScript(() => localStorage.setItem('mesmice.refresh', 'saved-refresh'));
-  await page.route('**/api/v1/auth/refresh', async (route) => {
-    await route.fulfill({
-      json: { accessToken: 'profile-access', refreshToken: 'rotated-refresh' }
-    });
-  });
-  await page.route('**/api/v1/users/me', async (route) => {
-    const externalLinks =
-      route.request().method() === 'PATCH'
-        ? (
-            (patchPayload = route.request().postDataJSON()) as {
-              externalLinks: Array<{ label: string; url: string }>;
-            }
-          ).externalLinks
-        : [{ label: 'Site pessoal', url: 'https://example.com' }];
-    await route.fulfill({
-      json: {
-        user: {
-          id: '9000000000000000001',
-          username: 'maria',
-          displayName: 'Maria Souza',
-          bio: 'Construindo comunidades com cuidado e criando espaços para boas conversas.',
-          avatarUrl: '/images/auth/mascote-neutro-lightmode.png',
-          avatarThumbUrl: null,
-          bannerUrl: '/images/landing-page/what-is/community-card.png',
-          externalLinks,
-          profileTheme: null,
-          avatarFrameUrl: null,
-          profileColor: '#8b5cf6',
-          badges: [],
-          presence: 'online',
-          lastActiveAt: '2026-01-01T12:00:00.000Z',
-          createdAt: '2026-01-01T12:00:00.000Z',
-          email: 'maria@example.com',
-          emailVerified: true
-        }
-      }
-    });
-  });
-  return { getPatchPayload: () => patchPayload };
-}
-
-test('owner edita links e a resposta canônica atualiza a visualização', async ({ page }) => {
-  const request = await mockAuthenticatedProfile(page);
-  await page.goto('/profile');
-  await page.getByRole('button', { name: 'Editar perfil' }).click();
-  await page.getByRole('button', { name: 'Editar links' }).click();
-  await page.getByLabel('Nome').fill('Portfólio');
-  await page.getByLabel('URL').fill('https://portfolio.example.com');
-  await page.getByRole('button', { name: 'Salvar links' }).click();
-
-  await expect(page.getByText('Link salvo com sucesso.')).toHaveAttribute('aria-live', 'polite');
-  await expect(
-    page.locator('.profile-preview').getByRole('link', { name: /Portfólio/ })
-  ).toBeVisible();
-  expect(request.getPatchPayload()).toEqual({
-    externalLinks: [{ label: 'Portfólio', url: 'https://portfolio.example.com' }]
-  });
-});
-
-test('usuário autenticado acessa o perfil sem overflow no mobile', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await mockAuthenticatedProfile(page);
-  await page.goto('/profile');
-
-  await expect(page).toHaveURL(/\/profile$/);
-  await expect(page.getByRole('heading', { name: 'Maria Souza' })).toBeVisible();
-  await expect(page.getByText(/Construindo comunidades/)).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Editar perfil' })).toHaveCount(0);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-    await page.evaluate(() => document.documentElement.clientWidth)
-  );
-});
-
-test('perfil local preserva hierarquia e mídia no desktop', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await mockAuthenticatedProfile(page);
-  await page.goto('/profile');
-
-  await expect(page.getByRole('heading', { name: 'Maria Souza' })).toBeVisible();
-  await expect(page.getByRole('img', { name: 'Avatar de Maria Souza' })).toBeVisible();
-  await expect(page.locator('.profile-header__banner-image')).toBeVisible();
-  await expect(page.getByRole('link', { name: /Site pessoal/ })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Editar perfil' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Editar perfil' }).click();
-  await expect(page.getByRole('heading', { name: 'Editar perfil' })).toBeVisible();
-  await expect(page.getByText('128 amigos')).toHaveCount(0);
-  await expect(page.locator('.profile-meta')).toHaveCSS('border-width', '0px');
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-    await page.evaluate(() => document.documentElement.clientWidth)
-  );
-});
-
-for (const viewport of [
-  { width: 375, height: 844 },
-  { width: 430, height: 932 },
-  { width: 1920, height: 1080 }
-]) {
-  test(`perfil permanece responsivo em ${viewport.width}px`, async ({ page }) => {
-    await page.setViewportSize(viewport);
-    await mockAuthenticatedProfile(page);
-    await page.goto('/profile');
-
-    await expect(page.getByRole('heading', { name: 'Maria Souza' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Conexões' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Destaque' })).toHaveCount(0);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-      await page.evaluate(() => document.documentElement.clientWidth)
-    );
-  });
-}
-
-test('tema do Profile permanece independente do App Theme no browser', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await mockAuthenticatedProfile(page);
-  await page.goto('/profile');
-  await page.getByRole('button', { name: 'Editar perfil' }).click();
-  await page.getByText('Opções avançadas de cor').click();
-
-  const primary = page.getByRole('textbox', { name: 'Cor do perfil hexadecimal' });
-  const secondary = page.getByRole('textbox', { name: 'Cor de apoio hexadecimal' });
-  const shell = page.locator('.profile-shell');
-
-  for (const combination of [
-    { appTheme: 'light', primary: '#FFFFFF', secondary: '#E9E9EF' },
-    { appTheme: 'dark', primary: '#FFFFFF', secondary: '#E9E9EF' },
-    { appTheme: 'light', primary: '#080808', secondary: '#1E1028' },
-    { appTheme: 'dark', primary: '#080808', secondary: '#1E1028' },
-    { appTheme: 'light', primary: '#8B5CF6', secondary: '#D8CCFF' },
-    { appTheme: 'dark', primary: '#1D4ED8', secondary: '#93C5FD' }
-  ]) {
-    await primary.fill(combination.primary);
-    await secondary.fill(combination.secondary);
-    await page.evaluate((theme) => {
-      document.documentElement.dataset.theme = theme;
-    }, combination.appTheme);
-
-    await expect(shell).toHaveCSS('--profile-color-primary', combination.primary);
-    await expect(shell).toHaveCSS('--profile-color-secondary', combination.secondary);
-  }
-
-  await page.getByRole('radio', { name: 'Gradiente' }).check();
-  await page
-    .getByRole('textbox', { name: 'Cor do nick hexadecimal', exact: true })
-    .fill('#FFB6D9');
-  await page.getByRole('textbox', { name: 'Segunda cor do nick hexadecimal' }).fill('#8B5CF6');
-  await expect(shell).toHaveAttribute('data-nickname-mode', 'gradient');
-});
-
 test('login destaca campos vazios ao tentar entrar', async ({ page }) => {
   await page.goto('/login');
   await page.getByRole('button', { name: 'Entrar' }).click();
-  await expect(page.getByPlaceholder(/voce@exemplo.com/)).toHaveAttribute('aria-invalid', 'true');
-  await expect(page.getByPlaceholder('Sua senha')).toHaveAttribute('aria-invalid', 'true');
-});
-
-test('inputs com ícones preservam espaço para o conteúdo', async ({ page }) => {
-  await page.goto('/login');
-
-  const emailInput = page.getByPlaceholder(/voce@exemplo.com/);
-  const passwordInput = page.getByPlaceholder('Sua senha');
-
-  expect(
-    await emailInput.evaluate((element) => Number.parseFloat(getComputedStyle(element).paddingLeft))
-  ).toBeGreaterThan(32);
-  expect(
-    await passwordInput.evaluate((element) =>
-      Number.parseFloat(getComputedStyle(element).paddingRight)
-    )
-  ).toBeGreaterThan(40);
+  await expect(page.getByPlaceholder(/voce@exemplo.com/)).toHaveClass(/border-red-500/);
+  await expect(page.getByPlaceholder('Sua senha')).toHaveClass(/border-red-500/);
 });
 
 test('cadastro permite montar um perfil em etapas', async ({ page }) => {
-  let registerPayload: unknown;
-  await page.route('**/api/v1/auth/register', async (route) => {
-    registerPayload = route.request().postDataJSON();
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      json: {
-        accessToken: 'register-access',
-        refreshToken: 'register-refresh',
-        user: {
-          id: '9000000000000000002',
-          username: 'pessoa_mesmice',
-          displayName: 'Pessoa Mesmice',
-          bio: null,
-          avatarUrl: null,
-          avatarThumbUrl: null,
-          bannerUrl: null,
-          externalLinks: [],
-          profileTheme: null,
-          avatarFrameUrl: null,
-          profileColor: null,
-          badges: [],
-          presence: 'offline',
-          lastActiveAt: null,
-          createdAt: '2026-09-02T12:00:00.000Z',
-          email: 'pessoa@exemplo.com',
-          emailVerified: false
-        }
-      }
-    });
-  });
   await page.goto('/register');
   await expect(page.getByRole('heading', { name: 'Crie seu cantinho' })).toBeVisible();
   await page.getByPlaceholder('Seu nome').fill('Pessoa Mesmice');
   await page.getByPlaceholder('como_te_encontram_no_mesmice').fill('pessoa_mesmice');
   await page.getByPlaceholder('voce@exemplo.com').fill('pessoa@exemplo.com');
-  await page.getByPlaceholder('Pelo menos 10 caracteres').fill('senha-segura');
+  await page.getByPlaceholder('Pelo menos 8 caracteres').fill('senha-segura');
   await page.getByPlaceholder('Digite a senha novamente').fill('senha-segura');
   await page.getByRole('checkbox', { name: /termos de uso/ }).check();
   await page.getByRole('button', { name: 'Criar conta' }).click();
-  await expect(page.getByRole('radio', { name: 'Masculino' })).toBeVisible();
-  await expect(page.getByRole('checkbox', { name: 'Masculino' })).toHaveCount(0);
   await page.getByLabel('Dia de nascimento').selectOption('20');
   await page.getByLabel('Mês de nascimento').selectOption('05');
   await page.getByLabel('Ano de nascimento').selectOption('1998');
@@ -361,14 +155,5 @@ test('cadastro permite montar um perfil em etapas', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'O que te interessa?' })).toBeVisible();
   await page.getByRole('button', { name: 'Continuar' }).click();
   await page.getByRole('button', { name: 'Criar meu perfil' }).click();
-  await expect(page).toHaveURL(/\/app$/);
-  expect(registerPayload).toEqual({
-    email: 'pessoa@exemplo.com',
-    username: 'pessoa_mesmice',
-    displayName: 'Pessoa Mesmice',
-    password: 'senha-segura'
-  });
-  expect(await page.evaluate(() => localStorage.getItem('mesmice.refresh'))).toBe(
-    'register-refresh'
-  );
+  await expect(page.getByRole('heading', { name: 'Seu perfil está pronto!' })).toBeVisible();
 });

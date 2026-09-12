@@ -48,7 +48,7 @@ export function ForgotPasswordPage() {
       <div className="mb-7">
         <h2 className="text-3xl font-bold tracking-tight text-[#2b1861]">Recupere sua senha</h2>
         <p className="mt-2 text-sm leading-6 text-[#66568d]">
-          Enviaremos um link seguro para o seu e-mail ou username cadastrado.
+          Enviaremos um link seguro para o seu e-mail ou telefone cadastrado.
         </p>
       </div>
       {mutation.isSuccess ? (
@@ -63,7 +63,7 @@ export function ForgotPasswordPage() {
       ) : (
         <form className="space-y-5" noValidate onSubmit={handleSubmit}>
           <label className="block text-xs font-bold uppercase tracking-wide text-[#2b1861]">
-            E-mail ou username
+            E-mail ou número de telefone
             <span className="relative block">
               <Mail size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8e7dbd]" />
               <input
@@ -71,7 +71,7 @@ export function ForgotPasswordPage() {
                 value={identifier}
                 onChange={(event) => setIdentifier(event.target.value)}
                 type="text"
-                placeholder="voce@exemplo.com ou username"
+                placeholder="voce@exemplo.com ou (11) 99999-9999"
                 autoComplete="username"
                 required
               />
@@ -103,7 +103,7 @@ export function ResetPasswordPage() {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitted(true);
-    if (!token || password.length < 10 || password !== confirmation || mutation.isPending) return;
+    if (!token || password.length < 8 || password !== confirmation || mutation.isPending) return;
     mutation.mutate({ token, password });
   }
 
@@ -116,8 +116,8 @@ export function ResetPasswordPage() {
   const validationMessage =
     submitted && !token
       ? 'O link de recuperação é inválido ou está incompleto.'
-      : submitted && password.length < 10
-        ? 'A senha precisa ter pelo menos 10 caracteres.'
+      : submitted && password.length < 8
+        ? 'A senha precisa ter pelo menos 8 caracteres.'
         : submitted && password !== confirmation
           ? 'As senhas não conferem.'
           : null;
@@ -152,13 +152,13 @@ export function ResetPasswordPage() {
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8e7dbd]"
               />
               <input
-                className={`${inputClass} pl-10 pr-11 ${submitted && password.length < 10 ? 'border-red-500' : ''}`}
+                className={`${inputClass} pl-10 pr-11 ${submitted && password.length < 8 ? 'border-red-500' : ''}`}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Pelo menos 10 caracteres"
+                placeholder="Pelo menos 8 caracteres"
                 autoComplete="new-password"
-                minLength={10}
+                minLength={8}
                 required
               />
               <button
