@@ -1,4 +1,4 @@
-import { Hash, LoaderCircle, Plus, X } from 'lucide-react';
+import { Hash, LoaderCircle, Plus, Settings, X } from 'lucide-react';
 import type { SpaceResponse, TextChannelResponse } from '../../../lib/api/endpoints.js';
 
 function initials(name: string) {
@@ -12,6 +12,7 @@ interface ChannelsSidebarProps {
   loading: boolean;
   onSelect: (channel: TextChannelResponse) => void;
   onCreate: () => void;
+  onSettings?: () => void;
   onClose?: () => void;
 }
 
@@ -22,6 +23,7 @@ export function ChannelsSidebar({
   loading,
   onSelect,
   onCreate,
+  onSettings,
   onClose
 }: ChannelsSidebarProps) {
   return (
@@ -48,6 +50,17 @@ export function ChannelsSidebar({
             aria-label="Fechar menu"
           >
             <X size={18} />
+          </button>
+        ) : null}
+        {onSettings ? (
+          <button
+            type="button"
+            className="inline-grid h-[30px] w-[30px] place-items-center rounded-md border-0 bg-transparent text-[color:var(--color-text-muted)] hover:bg-[color:var(--color-brand-soft)] hover:text-[color:var(--color-brand-primary)]"
+            onClick={onSettings}
+            aria-label="Configurar Space"
+            title="Configurar Space"
+          >
+            <Settings size={17} />
           </button>
         ) : null}
       </header>

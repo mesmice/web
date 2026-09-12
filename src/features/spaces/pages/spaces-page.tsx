@@ -15,6 +15,7 @@ import { EmptySpacesState } from '../components/empty-spaces-state.js';
 import { ErrorState } from '../components/error-state.js';
 import { RealtimeChat } from '../components/realtime-chat.js';
 import { SpaceRail } from '../components/space-rail.js';
+import { SpaceSettingsPanel } from '../components/space-settings-panel.js';
 import '../../../styles/tokens.css';
 
 export function SpacesPage() {
@@ -23,6 +24,7 @@ export function SpacesPage() {
   const [activeChannelId, setActiveChannelId] = useState<string>();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const queryClient = useQueryClient();
   const spaces = spacesQuery.data?.items ?? [];
   const activeSpace = spaces.find((space) => space.id === activeSpaceId) ?? spaces[0];
@@ -83,6 +85,7 @@ export function SpacesPage() {
           loading={channelsQuery.isLoading}
           onSelect={selectChannel}
           onCreate={() => setDialogOpen(true)}
+          onSettings={() => setSettingsOpen(true)}
           onClose={() => setMobileSidebarOpen(false)}
         />
       </div>
@@ -108,6 +111,13 @@ export function SpacesPage() {
         onClose={() => setDialogOpen(false)}
         onCreate={(name) => createMutation.mutate(name)}
       />
+      {settingsOpen && activeSpace ? (
+        <SpaceSettingsPanel
+          spaceId={activeSpace.id}
+          channels={channels}
+          onClose={() => setSettingsOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }
