@@ -1,4 +1,4 @@
-import { CornerUpLeft, Send, X } from 'lucide-react';
+import { CornerUpLeft, Plus, Send, X } from 'lucide-react';
 import { useState } from 'react';
 import { MentionTextarea } from './mention-textarea.js';
 import type { MentionableUser } from './mention-utils.js';
@@ -9,6 +9,7 @@ interface MessageComposerProps {
   replyTo?: MessageResponse | null;
   isSending?: boolean;
   onCancelReply: () => void;
+  onCreateThread?: () => void;
   onSend: (content: string, replyToId?: string) => Promise<void>;
 }
 
@@ -17,6 +18,7 @@ export function MessageComposer({
   replyTo,
   isSending = false,
   onCancelReply,
+  onCreateThread,
   onSend
 }: MessageComposerProps) {
   const [content, setContent] = useState('');
@@ -58,6 +60,17 @@ export function MessageComposer({
       ) : null}
 
       <div className="flex items-end gap-2">
+        {onCreateThread ? (
+          <button
+            type="button"
+            onClick={onCreateThread}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[color:var(--color-text-muted)] hover:bg-[color:var(--color-brand-soft)] hover:text-[color:var(--color-brand-primary)]"
+            aria-label="Criar tópico"
+            title="Criar tópico"
+          >
+            <Plus className="h-5 w-5" aria-hidden="true" />
+          </button>
+        ) : null}
         <MentionTextarea
           value={content}
           users={users}

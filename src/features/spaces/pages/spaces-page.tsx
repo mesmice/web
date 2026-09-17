@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createTextChannel,
@@ -25,6 +26,9 @@ export function SpacesPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedChannelId = searchParams.get('channel') ?? undefined;
+  const requestedMessageId = searchParams.get('message') ?? undefined;
   const queryClient = useQueryClient();
   const spaces = spacesQuery.data?.items ?? [];
   const activeSpace = spaces.find((space) => space.id === activeSpaceId) ?? spaces[0];
@@ -34,7 +38,9 @@ export function SpacesPage() {
     enabled: Boolean(activeSpace)
   });
   const channels = channelsQuery.data?.items ?? [];
-  const activeChannel = channels.find((channel) => channel.id === activeChannelId) ?? channels[0];
+  const requestedChannel = channels.find((channel) => channel.id === requestedChannelId);
+  const activeChannel =
+    requestedChannel ?? channels.find((channel) => channel.id === activeChannelId) ?? channels[0];
   const createMutation = useMutation({
     mutationFn: (name: string) => createTextChannel(activeSpace!.id, name),
     onSuccess: async ({ channel }) => {
@@ -64,6 +70,12 @@ export function SpacesPage() {
 
   function selectChannel(channel: TextChannelResponse) {
     setActiveChannelId(channel.id);
+    if (requestedChannelId) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('channel');
+      nextParams.delete('message');
+      setSearchParams(nextParams, { replace: true });
+    }
     setMobileSidebarOpen(false);
   }
 
@@ -101,7 +113,11 @@ export function SpacesPage() {
       ) : spaces.length === 0 ? (
         <EmptySpacesState />
       ) : (
-        <RealtimeChat channel={activeChannel} onMobileMenu={() => setMobileSidebarOpen(true)} />
+        <RealtimeChat
+          channel={activeChannel}
+          onMobileMenu={() => setMobileSidebarOpen(true)}
+          highlightMessageId={requestedMessageId}
+        />
       )}
       <CreateChannelDialog
         open={dialogOpen}

@@ -56,6 +56,16 @@ export interface SpaceChannelListResponse {
   items: TextChannelResponse[];
 }
 
+export interface ThreadResponse {
+  id: string;
+  parentContainerId: string;
+  rootMessageId: string | null;
+  name: string | null;
+  createdBy: string;
+  archivedAt: string | null;
+  createdAt: string;
+}
+
 export interface MessageResponse {
   id: string;
   containerId: string;
@@ -83,6 +93,11 @@ export interface MessageResponse {
 export interface MessagePageResponse {
   items: MessageResponse[];
   meta: { nextCursor: string | null };
+}
+
+export interface SavedMessageResponse {
+  message: MessageResponse | null;
+  savedAt: string;
 }
 
 export function getLiveness(): Promise<{ status: 'ok' }> {
@@ -170,7 +185,9 @@ export function acceptFriendRequest(requestId: string): Promise<{ friend: Friend
   return apiFetch(`/friends/requests/${requestId}/accept`, { method: 'POST' });
 }
 
-export function sendFriendRequest(addresseeId: string): Promise<
+export function sendFriendRequest(
+  addresseeId: string
+): Promise<
   | { accepted: true; friend: FriendSummaryResponse }
   | { accepted: false; request: FriendRequestResponse }
 > {
@@ -199,6 +216,46 @@ export function sendMessage(
   payload: { content: string; replyToId?: string; nonce?: string }
 ): Promise<{ message: MessageResponse }> {
   return apiFetch(`/channels/${channelId}/messages`, { method: 'POST', body: payload });
+}
+
+export function saveMessage(channelId: string, messageId: string): Promise<void> {
+  return apiFetch(`/channels/${channelId}/messages/${messageId}/save`, { method: 'PUT' });
+}
+
+export function unsaveMessage(channelId: string, messageId: string): Promise<void> {
+  return apiFetch(`/channels/${channelId}/messages/${messageId}/save`, { method: 'DELETE' });
+}
+
+export function getSavedMessages(options?: {
+  limit?: number;
+  cursor?: string;
+}): Promise<{ items: SavedMessageResponse[]; meta: { nextCursor: string | null } }> {
+  const params = new URLSearchParams({ limit: String(options?.limit ?? 50) });
+  if (options?.cursor) params.set('cursor', options.cursor);
+  return apiFetch(`/users/me/saved-messages?${params.toString()}`);
+}
+
+export function getThreads(channelId: string): Promise<{ items: ThreadResponse[] }> {
+  return apiFetch(`/channels/${channelId}/threads`);
+}
+
+export function createThread(
+  channelId: string,
+  name: string,
+  rootMessageId?: string
+): Promise<{ thread: ThreadResponse }> {
+  const path = rootMessageId
+    ? `/channels/${channelId}/messages/${rootMessageId}/thread`
+    : `/channels/${channelId}/threads`;
+  return apiFetch(path, { method: 'POST', body: { name } });
+}
+
+export function archiveThread(threadId: string): Promise<{ thread: ThreadResponse }> {
+  return apiFetch(`/threads/${threadId}/archive`, { method: 'POST' });
+}
+
+export function reopenThread(threadId: string): Promise<{ thread: ThreadResponse }> {
+  return apiFetch(`/threads/${threadId}/archive`, { method: 'DELETE' });
 }
 
 export function markChannelRead(
