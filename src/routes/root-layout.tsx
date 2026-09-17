@@ -14,8 +14,12 @@ import { ConversationRealtimeSync } from '../features/messages/realtime/conversa
 import './root-layout.css';
 
 const STATUS_LABEL = {
-  disconnected: 'offline', connecting: 'conectando', connected: 'conectado',
-  reconnecting: 'reconectando', unavailable: 'indisponível', revoked: 'sessão encerrada'
+  disconnected: 'offline',
+  connecting: 'conectando',
+  connected: 'conectado',
+  reconnecting: 'reconectando',
+  unavailable: 'indisponível',
+  revoked: 'sessão encerrada'
 };
 
 export function RootLayout() {
@@ -46,12 +50,16 @@ export function RootLayout() {
       }
     });
     const unsubscribeMessages = gateway.onMessage((message) => {
-      if (message.type === 'presence.update') setPresence(message.payload.userId, message.payload.status);
+      if (message.type === 'presence.update')
+        setPresence(message.payload.userId, message.payload.status);
       if (message.type === 'user.update') {
-        queryClient.setQueryData(profileKeys.me(), (current: ReturnType<typeof useAuthStore.getState>['user']) =>
-          current ? { ...current, ...message.payload.user } : current
+        queryClient.setQueryData(
+          profileKeys.me(),
+          (current: ReturnType<typeof useAuthStore.getState>['user']) =>
+            current ? { ...current, ...message.payload.user } : current
         );
-        if (message.payload.user.id === useAuthStore.getState().user?.id) setPresence(message.payload.user.id, message.payload.user.presence);
+        if (message.payload.user.id === useAuthStore.getState().user?.id)
+          setPresence(message.payload.user.id, message.payload.user.presence);
       }
     });
     const unsubscribeRevoked = gateway.onSessionRevoked(() => {
@@ -81,7 +89,9 @@ export function RootLayout() {
   }, [authStatus, setGatewayStatus, setPresence]);
 
   return (
-    <div className={`layout ${isAuthRoute ? 'layout--auth' : ''} ${isLandingRoute ? 'layout--landing' : ''}`}>
+    <div
+      className={`layout ${isAuthRoute ? 'layout--auth' : ''} ${isLandingRoute ? 'layout--landing' : ''}`}
+    >
       {!isAuthRoute && !isLandingRoute && (
         <header className="layout__header">
           <Link to="/" className="layout__brand" aria-label="Mesmice, página inicial">
@@ -90,6 +100,7 @@ export function RootLayout() {
           {authStatus === 'authenticated' ? (
             <nav className="layout__navigation" aria-label="Navegação principal">
               <NavLink to="/app/dms">Mensagens</NavLink>
+              <NavLink to="/app/saved">Guardadas</NavLink>
             </nav>
           ) : null}
           <ThemeToggle />

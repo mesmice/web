@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Hash, LoaderCircle, MessageCircle } from 'lucide-react';
 import {
   getMessages,
+  createThread,
+  getThreads,
   markChannelRead,
+  saveMessage,
   sendMessage,
   type MessageResponse,
-  type TextChannelResponse
+  type TextChannelResponse,
+  type ThreadResponse
 } from '../../../lib/api/endpoints.js';
 import { gateway } from '../../../lib/ws/socket.js';
 import { useAuthStore } from '../../../stores/auth-store.js';
@@ -14,16 +18,41 @@ import { MessageComposer } from '../../messages/components/message-composer.js';
 import type { MentionableUser } from '../../messages/components/mention-utils.js';
 import { ErrorState } from './error-state.js';
 import { MessageItem } from './message-item.js';
+import { ThreadsPanel } from './threads-panel.js';
 
 interface RealtimeChatProps {
   channel?: TextChannelResponse;
   onMobileMenu: () => void;
+  highlightMessageId?: string;
 }
 
-export function RealtimeChat({ channel, onMobileMenu }: RealtimeChatProps) {
+export function RealtimeChat({ channel, onMobileMenu, highlightMessageId }: RealtimeChatProps) {
   const queryClient = useQueryClient();
   const currentUser = useAuthStore((state) => state.user);
   const [replyTo, setReplyTo] = useState<MessageResponse | null>(null);
+  const [openThread, setOpenThread] = useState<ThreadResponse | null>(null);
+  const [threadMessage, setThreadMessage] = useState<MessageResponse | null>(null);
+  const [threadName, setThreadName] = useState('');
+  const [threadDialogOpen, setThreadDialogOpen] = useState(false);
+  const saveMutation = useMutation({
+    mutationFn: (message: MessageResponse) => saveMessage(message.containerId, message.id)
+  });
+  const threadsQuery = useQuery({
+    queryKey: ['threads', channel?.id],
+    queryFn: () => getThreads(channel!.id),
+    enabled: Boolean(channel)
+  });
+  const createThreadMutation = useMutation({
+    mutationFn: ({ name, messageId }: { name: string; messageId?: string }) =>
+      createThread(channel!.id, name, messageId),
+    onSuccess: ({ thread }) => {
+      queryClient.invalidateQueries({ queryKey: ['threads', channel?.id] });
+      setOpenThread(thread);
+      setThreadMessage(null);
+      setThreadName('');
+      setThreadDialogOpen(false);
+    }
+  });
   const query = useInfiniteQuery({
     queryKey: ['messages', channel?.id],
     queryFn: ({ pageParam }) => getMessages(channel!.id, { cursor: pageParam }),
@@ -40,6 +69,40 @@ export function RealtimeChat({ channel, onMobileMenu }: RealtimeChatProps) {
     () => query.data?.pages.flatMap((page) => page.items).reverse() ?? [],
     [query.data]
   );
+  const threadsByRoot = useMemo(() => {
+    const threads = threadsQuery.data?.items ?? [];
+    return new Map(
+      threads
+        .filter((thread) => thread.rootMessageId)
+        .map((thread) => [thread.rootMessageId, thread])
+    );
+  }, [threadsQuery.data]);
+
+  useEffect(() => {
+    if (!highlightMessageId || !messages.some((message) => message.id === highlightMessageId))
+      return;
+    const element = document.querySelector<HTMLElement>(
+      `[data-message-id="${highlightMessageId}"]`
+    );
+    if (!element) return;
+    element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    element.classList.add('rounded-md', 'p-2', 'ring-2', 'ring-[color:var(--color-brand-primary)]');
+    const timer = window.setTimeout(() => {
+      element.classList.remove(
+        'rounded-md',
+        'p-2',
+        'ring-2',
+        'ring-[color:var(--color-brand-primary)]'
+      );
+    }, 4000);
+    return () => window.clearTimeout(timer);
+  }, [highlightMessageId, messages]);
+
+  function requestCreateThread(message?: MessageResponse) {
+    setThreadMessage(message ?? null);
+    setThreadName(message ? `Tópico sobre ${message.content.slice(0, 50)}` : '');
+    setThreadDialogOpen(true);
+  }
 
   useEffect(() => {
     if (!channel) return;
@@ -125,6 +188,10 @@ export function RealtimeChat({ channel, onMobileMenu }: RealtimeChatProps) {
                 messages={messages}
                 currentUserId={currentUser?.id}
                 onReply={setReplyTo}
+                onCreateThread={requestCreateThread}
+                onSaveMessage={(savedMessage) => saveMutation.mutate(savedMessage)}
+                thread={threadsByRoot.get(message.id)}
+                onOpenThread={setOpenThread}
               />
             ))}
           </ul>
@@ -143,10 +210,68 @@ export function RealtimeChat({ channel, onMobileMenu }: RealtimeChatProps) {
         replyTo={replyTo}
         isSending={sendMutation.isPending}
         onCancelReply={() => setReplyTo(null)}
+        onCreateThread={() => requestCreateThread()}
         onSend={async (content, replyToId) => {
           await sendMutation.mutateAsync({ content, replyToId });
         }}
       />
+      {openThread ? <ThreadsPanel thread={openThread} onClose={() => setOpenThread(null)} /> : null}
+      {threadDialogOpen ? (
+        <div
+          className="fixed inset-0 z-30 grid place-items-center bg-black/30 p-4"
+          role="presentation"
+        >
+          <form
+            className="w-full max-w-md rounded-xl border border-[color:var(--color-border-default)] bg-[color:var(--color-surface-primary)] p-5 shadow-2xl"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (threadName.trim()) {
+                createThreadMutation.mutate({
+                  name: threadName.trim(),
+                  messageId: threadMessage?.id
+                });
+              }
+            }}
+          >
+            <h2 className="text-base font-semibold text-[color:var(--color-text-primary)]">
+              Criar tópico
+            </h2>
+            <p className="mt-1 text-sm text-[color:var(--color-text-muted)]">
+              {threadMessage
+                ? 'A conversa ficará ligada a esta mensagem.'
+                : 'A conversa começará como um tópico do canal.'}
+            </p>
+            <input
+              autoFocus
+              value={threadName}
+              onChange={(event) => setThreadName(event.target.value)}
+              maxLength={100}
+              placeholder="Nome do tópico"
+              className="mt-4 w-full rounded-md border border-[color:var(--color-border-default)] bg-transparent px-3 py-2 text-sm text-[color:var(--color-text-primary)] outline-none focus:border-[color:var(--color-border-focus)]"
+            />
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setThreadMessage(null);
+                  setThreadName('');
+                  setThreadDialogOpen(false);
+                }}
+                className="rounded-md px-3 py-2 text-sm text-[color:var(--color-text-muted)]"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={!threadName.trim() || createThreadMutation.isPending}
+                className="rounded-md bg-[color:var(--color-brand-primary)] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                Criar tópico
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </main>
   );
 }
